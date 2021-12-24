@@ -44,6 +44,14 @@ class Canvas:
         self._update: Callable[[Canvas], None] = dummy
 
     @property
+    def width(self) -> int:
+        return self._screen.get_width()
+
+    @property
+    def height(self) -> int:
+        return self._screen.get_height()
+
+    @property
     def running(self) -> bool:
         return self._running
 

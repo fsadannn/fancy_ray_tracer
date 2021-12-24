@@ -31,6 +31,10 @@ lint:
 test:
 	poetry run pytest ${PROJECT} tests --doctest-modules --cov=${PROJECT} --cov-report=xml --cov-config=.coveragerc -v
 
+.PHONY: test-fast
+test-fast:
+	poetry run pytest ${PROJECT} tests -v
+
 .PHONY: coverage
 coverage:
 	poetry run pytest ${PROJECT} tests --doctest-modules --cov=${PROJECT} --cov-config=.coveragerc --cov-report=html -v
