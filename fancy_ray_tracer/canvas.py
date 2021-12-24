@@ -13,7 +13,8 @@ ColorInput = Union[
 RgbaOutput = Tuple[int, int, int, int]
 
 
-def dummy(cv: Canvas): pass
+def dummy(cv: Canvas):  # pylint: disable=unused-argument
+    pass
 
 
 class Canvas:

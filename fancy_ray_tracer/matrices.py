@@ -11,6 +11,10 @@ def inverse(a: np.ndarray) -> np.ndarray:
     return np.linalg.inv(a)
 
 
+def inverse_dot(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    return np.linalg.solve(a, b)
+
+
 def translation(x: float, y: float, z: float) -> np.ndarray:
     eye: np.ndarray = np.eye(4, 4)
     eye[0, 3] = x
@@ -61,7 +65,7 @@ def rotZ(rads: float) -> np.ndarray:
 
 
 # also know as skew transformation
-def sharing(xy: float, xz: float, yx: float, yz: float, zx: float, zy: float) -> np.ndarray:
+def sharing(xy: float, xz: float, yx: float, yz: float, zx: float, zy: float) -> np.ndarray:  # pylint: disable=too-many-arguments
     eye: np.ndarray = np.eye(4, 4)
     eye[0, 1] = xy
     eye[0, 2] = xz

@@ -1,11 +1,15 @@
 import numpy as np
 
-ATOL = 1e-12
-RTOL = 1e-9
+ATOL = 1e-5
+RTOL = 1e-5
 
 
 class MistmatchTypeError(Exception):
     pass
+
+
+def color(r: float, g: float, b: float) -> np.ndarray:
+    return np.array([r, g, b])
 
 
 def point(x: float, y: float, z: float) -> np.ndarray:

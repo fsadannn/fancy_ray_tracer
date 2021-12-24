@@ -1,4 +1,6 @@
-from math import pi
+from base64 import b64encode
+from math import pi  # pylint: disable=unused-import
+from os import urandom
 from typing import List
 
 import numpy as np
@@ -20,3 +22,7 @@ def chain(ops: List[np.ndarray], p: np.ndarray) -> np.ndarray:
         res = op.dot(res)
 
     return res
+
+
+def rand_id(length: int = 20) -> str:
+    return b64encode(urandom(length)).decode('ascii')
