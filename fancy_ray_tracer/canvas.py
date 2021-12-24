@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
 import pygame
 
@@ -112,3 +112,17 @@ class Canvas:
 
     def to_img(self, file: str):
         pygame.image.save(self._screen, file)
+
+
+class CanvasImg(Canvas):
+    def __init__(self, file: str, screenSize: Tuple[int, int] = (512, 512)):
+        super().__init__(screenSize)
+        self._file: str = file
+
+    def run(self):
+        def dummy_func(cv: CanvasImg):
+            cv.to_img(self._file)
+            cv.stop()
+
+        self._update = dummy_func
+        super().run()

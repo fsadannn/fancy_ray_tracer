@@ -1,8 +1,8 @@
 from math import sqrt
 
-from fancy_ray_tracer import Canvas, matrices, tuples, utils
+from fancy_ray_tracer import Canvas, CanvasImg, matrices, tuples, utils
 
-cv = Canvas()
+cv = CanvasImg('clock.jpg')
 
 orig = tuples.point(0, 1, 0)
 radius: float = 3 / 4 * (min(cv.width, cv.height) / 2)
