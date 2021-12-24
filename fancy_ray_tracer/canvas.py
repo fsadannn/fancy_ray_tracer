@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
-from typing import List, Sequence, Tuple, Union
+from typing import Callable, List, Sequence, Tuple, Union
 
 import pygame
 
@@ -11,13 +13,16 @@ ColorInput = Union[
 RgbaOutput = Tuple[int, int, int, int]
 
 
+def dummy(cv: Canvas): pass
+
+
 class Canvas:
 
     def __init__(self, screenSize: Tuple[int, int] = (512, 512), title="Graphics Window"):
         # initialize all pygame modules
         pygame.init()  # pylint: disable=no-member
         # indicate rendering details
-        displayFlags = pygame.DOUBLEBUF | pygame.OPENGL  # pylint: disable=no-member
+        displayFlags = pygame.GL_DOUBLEBUFFER  # pylint: disable=no-member
         # initialize buffers to perform antialiasing
         pygame.display.gl_set_attribute(
             pygame.GL_MULTISAMPLEBUFFERS, 1)  # pylint: disable=no-member
@@ -36,10 +41,15 @@ class Canvas:
         self._running: bool = True
         # manage time-related data and operations
         self._clock: pygame.time.Clock = pygame.time.Clock()
+        self._update: Callable[[Canvas], None] = dummy
 
     @property
     def running(self) -> bool:
         return self._running
+
+    @property
+    def surface(self):
+        return self._screen
 
     def stop(self):
         self._running = False
@@ -47,8 +57,8 @@ class Canvas:
     def initialize(self):
         pass
 
-    def update(self):
-        pass
+    def set_update(self, updatefn: Callable[[Canvas], None]):
+        self._update = updatefn
 
     def run(self):
         ## startup ##
@@ -64,8 +74,7 @@ class Canvas:
                     self._running = False
 
             ## update ##
-            self.update()
-
+            self._update(self)
             ## render ##
             # display image on screen
             pygame.display.flip()
@@ -92,3 +101,6 @@ class Canvas:
             yield pygame.PixelArray(self._screen)
         finally:
             px_array.close()
+
+    def to_img(self, file: str):
+        pygame.image.save(self._screen, file)

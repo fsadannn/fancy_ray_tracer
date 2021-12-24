@@ -150,4 +150,4 @@ dmypy.json
 .nfs*
 
 # others
-test.py
+*.jpg

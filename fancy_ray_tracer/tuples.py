@@ -25,4 +25,14 @@ def is_vector(a: np.ndarray) -> bool:
 
 
 def norm(a: np.ndarray) -> float:
-    return np.linalg.norm(a[0:2])
+    return np.linalg.norm(a)
+
+
+def normalize(a: np.ndarray) -> np.ndarray:
+    nm: float = np.linalg.norm(a)
+    return a / nm
+
+
+def cross(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    cx = np.cross(a, b)
+    return np.append(cx, 0)
