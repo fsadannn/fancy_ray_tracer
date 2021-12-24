@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "fancy-ray-tracer"
+version = "0.1.0"
+description = ""
+authors = ["Frank S. <fsadannn@gmail.com>"]
+license = "MIT"
+
+[[tool.poetry.source]]
+name = "nexus"
+url = "http://nexus.prod.uci.cu/repository/pypi-all/simple"
+default = true
+
+[tool.poetry.dependencies]
+python = "^3.8,<3.11"
+pygame = "^2.1.0"
+numpy = "^1.21.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pylint = "^2.12.2"
+pytest-cov = "^3.0.0"
+codecov = "^2.1.12"
+coverage = "^6.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
