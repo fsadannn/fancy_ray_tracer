@@ -1,0 +1,5 @@
+from math import pi as _pi  # pylint: disable=unused-import
+
+ATOL = 1e-5
+RTOL = 1e-5
+PI = _pi

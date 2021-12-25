@@ -5,9 +5,11 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from .matrices import identity, inverse
-from .tuples import ATOL, equal, normalize, point
-from .utils import rand_id
+from .constants import ATOL
+from .materials import Material
+from .protocols import WorldObject
+from .tuples import normalize, point
+from .utils import equal
 
 
 class Ray:
@@ -35,48 +37,15 @@ class Ray:
         return equal(self._direction, other._direction) and equal(self._origin, other._origin)
 
 
-class Sphere:
-    __slots__ = ("_id", '_transform', 'material', '_inv_transform')
-
-    def __init__(self, sphereId: Optional[str] = None):
-        self._id: str = sphereId if sphereId else rand_id()
-        self._transform: np.ndarray = identity()
-        self.material = make_material()
-        self._inv_transform: np.ndarray = None
-
-    @property
-    def transform(self) -> np.ndarray:
-        return self._transform
-
-    @property
-    def inv_transform(self) -> np.ndarray:
-        if self._inv_transform is None:
-            self._inv_transform = inverse(self._transform)
-        return self._inv_transform
-
-    @property
-    def id(self) -> str:
-        return self._id
-
-    def set_transform(self, transform: np.ndarray):
-        self._transform = transform
-
-    def __eq__(self, other: Sphere) -> bool:
-        if not isinstance(other, Sphere):
-            raise NotImplementedError
-
-        return self.id == other.id
-
-
 class Intersection:
     __slots__ = ("_t", "_object")
 
-    def __init__(self, t: float, sphere: Sphere):
+    def __init__(self, t: float, object: WorldObject):
         self._t: float = t
-        self._object: Sphere = sphere
+        self._object: WorldObject = object
 
     @property
-    def object(self) -> Sphere:
+    def object(self) -> WorldObject:
         return self._object
 
     @property
@@ -112,32 +81,7 @@ class Light:
         return equal(self._position, other._position) and equal(self._intensity, other._intensity)
 
 
-class Material:
-    __slots__ = ("color", "ambient", "diffuse", "specular", "shininess")
-
-    def __init__(self, color: np.ndarray, ambient: float, diffuse: float, specular: float, shininess: float):
-        self.color: np.ndarray = color
-        self.ambient: float = ambient
-        self.diffuse: float = diffuse
-        self.specular: float = specular
-        self.shininess: float = shininess
-
-    def __eq__(self, other: Material) -> bool:
-        if not isinstance(other, Material):
-            raise NotImplementedError
-
-        return equal(self.color, other.color) and abs(self.ambient - other.ambient) < ATOL and abs(self.diffuse - other.diffuse) < ATOL and abs(self.specular - other.specular) < ATOL and abs(self.shininess - other.shininess) < ATOL
-
-
-def make_sphere() -> Sphere:
-    return Sphere()
-
-
-def make_material() -> Material:
-    return Material(np.array([1.0, 1.0, 1.0]), 0.1, 0.9, 0.9, 200.0)
-
-
-def intersect(s: Sphere, r: Ray) -> Sequence[Intersection]:
+def intersect(s: WorldObject, r: Ray) -> Sequence[Intersection]:
     ray2 = transform(r, s.inv_transform)
 
     sphere_to_ray = ray2.origin - point(0.0, 0.0, 0.0)
@@ -178,8 +122,8 @@ def transform(ray: Ray, matrix: np.ndarray) -> Ray:
     return Ray(orig, direct)
 
 
-def normal_at(sphere: Sphere, p: np.ndarray) -> np.ndarray:
-    tinv = sphere.inv_transform
+def normal_at(object: WorldObject, p: np.ndarray) -> np.ndarray:
+    tinv = object.inv_transform
     object_point = tinv.dot(p)
     object_normal = object_point - point(0.0, 0.0, 0.0)
     world_normal = tinv.T.dot(object_normal)
@@ -192,7 +136,8 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
     return v - (2 * v.dot(n)) * n
 
 
-def lighting(material: Material, light: Light, point: np.ndarray, eyev: np.ndarray, normalv: np.ndarray):
+def lighting(material: Material, light: Light, point: np.ndarray,
+             eyev: np.ndarray, normalv: np.ndarray):
     # combine the surface color with the light's color/intensity
     effective_color = material.color * light.intensity
     # find the direction to the light source

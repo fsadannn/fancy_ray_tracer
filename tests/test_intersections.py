@@ -7,7 +7,7 @@ from fancy_ray_tracer import (
     scaling,
     vector,
 )
-from fancy_ray_tracer.tuples import ATOL
+from fancy_ray_tracer.constants import ATOL
 
 
 def test_intersect():

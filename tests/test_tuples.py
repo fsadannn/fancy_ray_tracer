@@ -1,5 +1,5 @@
 import numpy as np
-from fancy_ray_tracer import tuples
+from fancy_ray_tracer import equal, tuples
 
 
 def test_make_point():
@@ -16,4 +16,4 @@ def test_make_vector():
 
 def test_equal():
     vc = tuples.vector(4, -4, 3)
-    assert tuples.equal(vc, vc)
+    assert equal(vc, vc)

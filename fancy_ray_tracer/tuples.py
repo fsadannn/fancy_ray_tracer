@@ -1,14 +1,11 @@
 import numpy as np
 
-ATOL = 1e-5
-RTOL = 1e-5
-
 
 class MistmatchTypeError(Exception):
     pass
 
 
-def color(r: float, g: float, b: float) -> np.ndarray:
+def make_color(r: float, g: float, b: float) -> np.ndarray:
     return np.array([r, g, b])
 
 
@@ -18,14 +15,6 @@ def point(x: float, y: float, z: float) -> np.ndarray:
 
 def vector(x: float, y: float, z: float) -> np.ndarray:
     return np.array([x, y, z, 0])
-
-
-def equal(a: np.ndarray, b: np.ndarray) -> bool:
-    return np.allclose(a, b, rtol=RTOL, atol=ATOL)
-
-
-def is_vector(a: np.ndarray) -> bool:
-    return a[3] < RTOL
 
 
 def norm(a: np.ndarray) -> float:

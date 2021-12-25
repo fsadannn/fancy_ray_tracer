@@ -1,7 +1,13 @@
-from fancy_ray_tracer import Canvas, point, ray
-from fancy_ray_tracer.matrices import scaling
-from fancy_ray_tracer.tuples import color as make_color
-from fancy_ray_tracer.tuples import normalize
+from fancy_ray_tracer import (
+    Canvas,
+    Light,
+    Sphere,
+    make_color,
+    normalize,
+    point,
+    ray,
+    scaling,
+)
 
 canvas_pixels = 400
 ray_origin = point(0, 0, -5)
@@ -13,13 +19,13 @@ half = wall_size / 2
 cv = Canvas((canvas_pixels, canvas_pixels))
 
 color = make_color(1, 0, 0)
-shape = ray.Sphere()
+shape = Sphere()
 shape.material.color = make_color(1, 0.2, 1)
 #shape.set_transform(scaling(1, 0.5, 1))
 
 light_position = point(-10, 10, -10)
 light_color = make_color(1, 1, 1)
-light = ray.Light(light_position, light_color)
+light = Light(light_position, light_color)
 
 for y in range(canvas_pixels - 1):
     world_y = half - pixel_size * y

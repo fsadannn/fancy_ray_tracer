@@ -1,12 +1,13 @@
 from base64 import b64encode
-from math import pi  # pylint: disable=unused-import
 from os import urandom
-from typing import List
+from typing import Sequence
 
 import numpy as np
 
+from .constants import ATOL, RTOL
 
-def chain_ops(ops: List[np.ndarray]) -> np.ndarray:
+
+def chain_ops(ops: Sequence[np.ndarray]) -> np.ndarray:
     if len(ops) == 0:
         return np.eye(4, 4)
     res: np.ndarray = ops[0]
@@ -16,7 +17,7 @@ def chain_ops(ops: List[np.ndarray]) -> np.ndarray:
     return res
 
 
-def chain(ops: List[np.ndarray], p: np.ndarray) -> np.ndarray:
+def chain(ops: Sequence[np.ndarray], p: np.ndarray) -> np.ndarray:
     res: np.ndarray = p
     for op in ops:
         res = op.dot(res)
@@ -26,3 +27,11 @@ def chain(ops: List[np.ndarray], p: np.ndarray) -> np.ndarray:
 
 def rand_id(length: int = 20) -> str:
     return b64encode(urandom(length)).decode('ascii')
+
+
+def equal(a: np.ndarray, b: np.ndarray) -> bool:
+    return np.allclose(a, b, rtol=RTOL, atol=ATOL)
+
+
+def is_vector(a: np.ndarray) -> bool:
+    return a[3] < RTOL

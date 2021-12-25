@@ -2,13 +2,13 @@ from math import sqrt
 
 from fancy_ray_tracer import (
     Ray,
+    constants,
     equal,
     make_sphere,
     point,
     scaling,
     transform,
     translation,
-    utils,
     vector,
 )
 from fancy_ray_tracer.matrices import identity, rotZ
@@ -91,7 +91,7 @@ def test_normal_translated_sphere():
 
 def test_normal_transformed_sphere():
     s = make_sphere()
-    m = scaling(1, 0.5, 1).dot(rotZ(utils.pi / 5))
+    m = scaling(1, 0.5, 1).dot(rotZ(constants.PI / 5))
     s.set_transform(m)
     n = normal_at(s, point(0, sqrt(2) / 2, -sqrt(2) / 2))
     assert equal(n, vector(0, 0.97014, -0.24254))
