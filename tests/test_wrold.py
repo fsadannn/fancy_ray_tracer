@@ -3,12 +3,15 @@ from fancy_ray_tracer import (
     Ray,
     Sphere,
     World,
+    equal,
     make_color,
     point,
     scaling,
     vector,
 )
 from fancy_ray_tracer.constants import ATOL
+from fancy_ray_tracer.illumination import lighting
+from fancy_ray_tracer.ray import Computations, Intersection
 
 SPHERE_CACHE = {}
 DEFAULT_KEY = 'default'
@@ -48,7 +51,7 @@ def test_world():
     light = make_default_light()
     w = make_default_world()
     s1, s2 = make_spheres()
-    assert w.light == light
+    assert w.light[0] == light
     assert w.has_object(s1)
     assert w.has_object(s2)
 
@@ -62,3 +65,49 @@ def test_world_intersection():
     assert abs(xs[1].t - 4.5) < ATOL
     assert abs(xs[2].t - 5.5) < ATOL
     assert abs(xs[3].t - 6) < ATOL
+
+
+def test_world_shading():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    shape = w.objects[0]
+    i = Intersection(4, shape)
+    comps = Computations(i, r)
+    c = w.shade_hit(comps)
+    assert equal(c, make_color(0.38066, 0.47583, 0.2855))
+
+
+def test_world_shading_inside():
+    w = make_default_world()
+    w.light = [Light(point(0, 0.25, 0), make_color(1, 1, 1))]
+    r = Ray(point(0, 0, 0), vector(0, 0, 1))
+    shape = w.objects[1]
+    i = Intersection(0.5, shape)
+    comps = Computations(i, r)
+    c = w.shade_hit(comps)
+    assert equal(c, make_color(0.90498, 0.90498, 0.90498))
+
+
+def test_world_color_ray_miss():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 1, 0))
+    c = w.color_at(r)
+    assert equal(c, make_color(0, 0, 0))
+
+
+def test_world_color_ray_hits():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    c = w.color_at(r)
+    assert equal(c, make_color(0.38066, 0.47583, 0.2855))
+
+
+def test_world_color_ray_hits_behind():
+    w = make_default_world()
+    outer = w.objects[0]
+    outer.material.ambient = 1.0
+    inner = w.objects[1]
+    inner.material.ambient = 1.0
+    r = Ray(point(0, 0, 0.75), vector(0, 0, -1))
+    c = w.color_at(r)
+    assert equal(c, inner.material.color)

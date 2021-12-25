@@ -1,5 +1,7 @@
 from fancy_ray_tracer import Intersection, Ray, make_sphere, point, scaling, vector
 from fancy_ray_tracer.constants import ATOL
+from fancy_ray_tracer.ray import Computations
+from fancy_ray_tracer.utils import equal
 
 
 def test_intersect():
@@ -60,3 +62,34 @@ def test_intersect_sphere():
     assert len(xs) == 2
     assert abs(xs[0].t - 3) < ATOL
     assert abs(xs[1].t - 7) < ATOL
+
+
+def test_computations():
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    s = make_sphere()
+    i = Intersection(4, s)
+    comps = Computations(i, r)
+    assert comps.t == i.t
+    assert comps.object == i.object
+    assert equal(comps.point, point(0, 0, -1))
+    assert equal(comps.eyev, vector(0, 0, -1))
+    assert equal(comps.normalv, vector(0, 0, -1))
+
+
+def test_hit_outside():
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    s = make_sphere()
+    i = Intersection(4, s)
+    comps = Computations(i, r)
+    assert comps.inside == False
+
+
+def test_hit_inside():
+    r = Ray(point(0, 0, 0), vector(0, 0, 1))
+    s = make_sphere()
+    i = Intersection(1, s)
+    comps = Computations(i, r)
+    assert comps.inside == True
+    assert equal(comps.point, point(0, 0, 1))
+    assert equal(comps.eyev, vector(0, 0, -1))
+    assert equal(comps.normalv, vector(0, 0, -1))

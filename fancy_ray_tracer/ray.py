@@ -3,6 +3,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from functools import total_ordering
 from math import pow, sqrt
+from operator import truediv
 from typing import Optional, Sequence
 
 import numpy as np
@@ -83,12 +84,19 @@ class Ray:
 
 
 class Computations:
-    __slots__ = ("t", "object", "point")
+    __slots__ = ("t", "object", "point", "eyev", "normalv", "inside")
 
     def __init__(self, intersection: Intersection, ray: Ray) -> None:
         self.t: float = intersection.t
         self.object: WorldObject = intersection.object
-        self.point: np.ndarray = ray.position(intersection.t)
+        self.point: np.ndarray = ray.origin + ray.direction * self.t
+        self.eyev = -ray.direction
+        self.normalv = normal_at(self.object, self.point)
+        if self.normalv.dot(self.eyev) < 0:
+            self.inside: bool = True
+            self.normalv = -self.normalv
+        else:
+            self.inside = False
 
 
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
@@ -107,7 +115,7 @@ def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
 
 
 def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
-    if intersections is None or len(intersections == 0):
+    if intersections is None or len(intersections) == 0:
         return None
 
     temp = Intersection(0, None)
