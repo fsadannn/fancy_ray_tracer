@@ -8,22 +8,10 @@ from .materials import Material
 
 
 class WorldObject(Protocol):
-    _id: str
-    _transform: np.ndarray
+    id: str
+    transform: np.ndarray
     material: Material
-    _inv_transform: np.ndarray
-
-    @property
-    def transform(self) -> np.ndarray:
-        raise NotImplementedError
-
-    @property
-    def inv_transform(self) -> np.ndarray:
-        raise NotImplementedError
-
-    @property
-    def id(self) -> str:
-        raise NotImplementedError
+    inv_transform: np.ndarray
 
     def set_transform(self, transform: np.ndarray) -> None:
         raise NotImplementedError

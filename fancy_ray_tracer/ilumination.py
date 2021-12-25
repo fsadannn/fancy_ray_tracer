@@ -10,25 +10,17 @@ from .utils import equal
 
 
 class Light:
-    __slots__ = ("_intensity", "_position")
+    __slots__ = ("intensity", "position")
 
     def __init__(self, position: np.ndarray, intensity: np.ndarray):
-        self._intensity: np.ndarray = intensity
-        self._position: np.ndarray = position
-
-    @property
-    def intensity(self) -> np.ndarray:
-        return self._intensity
-
-    @property
-    def position(self) -> np.ndarray:
-        return self._position
+        self.intensity: np.ndarray = intensity
+        self.position: np.ndarray = position
 
     def __eq__(self, other: Light) -> bool:
         if not isinstance(other, Light):
             raise NotImplementedError
 
-        return equal(self._position, other._position) and equal(self._intensity, other._intensity)
+        return equal(self.position, other.position) and equal(self.intensity, other.intensity)
 
 
 def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
@@ -38,12 +30,12 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
 def lighting(material: Material, light: Light, point: np.ndarray,
              eyev: np.ndarray, normalv: np.ndarray):
     # combine the surface color with the light's color/intensity
-    effective_color = material.color * light._intensity
+    effective_color = material.color * light.intensity
 
     # find the direction to the light source
     # normalization inplace, equivalent to
     # lightv = normalize(light.position - point)
-    lightv: np.ndarray = light._position - point
+    lightv: np.ndarray = light.position - point
     nm: float = sqrt(lightv.dot(lightv))
     lightv *= (1.0 / nm)
     # compute the ambient contribution
@@ -77,7 +69,7 @@ def lighting(material: Material, light: Light, point: np.ndarray,
 
     # compute the specular contribution
     factor = pow(reflect_dot_eye, material.shininess)
-    specular = light._intensity * material.specular * factor
+    specular = light.intensity * material.specular * factor
 
     # Add the three contributions together to get the final shading
     return ambient + diffuse + specular

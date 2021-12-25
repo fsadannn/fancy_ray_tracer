@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from bisect import bisect_left
+from functools import total_ordering
 from math import pow, sqrt
 from typing import Optional, Sequence
 
@@ -11,62 +13,53 @@ from .protocols import WorldObject
 from .utils import equal
 
 
+@total_ordering
 class Intersection:
-    __slots__ = ("_t", "_object")
+    __slots__ = ("t", "object")
 
     def __init__(self, t: float, object: WorldObject):
-        self._t: float = t
-        self._object: WorldObject = object
-
-    @property
-    def object(self) -> WorldObject:
-        return self._object
-
-    @property
-    def t(self) -> float:
-        return self._t
+        self.t: float = t
+        self.object: WorldObject = object
 
     def __eq__(self, other: Intersection) -> bool:
         if not isinstance(other, Intersection):
             raise NotImplementedError
 
-        return abs(self._t - other._t) < ATOL and self._object == other._object
+        return abs(self.t - other.t) < ATOL and self.object == other.object
+
+    def __lt__(self, other: Intersection):
+        if not isinstance(other, Intersection):
+            raise NotImplementedError
+
+        return self.t < other.t
 
 
 class Ray:
-    __slots__ = ("_origin", "_direction")
+    __slots__ = ("origin", "direction")
 
     def __init__(self, origin: np.ndarray, direction: np.ndarray):
-        self._origin: np.ndarray = origin
-        self._direction: np.ndarray = direction
-
-    @property
-    def origin(self) -> np.ndarray:
-        return self._origin
-
-    @property
-    def direction(self) -> np.ndarray:
-        return self._direction
+        self.origin: np.ndarray = origin
+        self.direction: np.ndarray = direction
 
     def position(self, t: float) -> np.ndarray:
-        return self._origin + self._direction * t
+        return self.origin + self.direction * t
 
     def __eq__(self, other: Ray) -> bool:
         if not isinstance(other, Ray):
             raise NotImplementedError
 
-        return equal(self._direction, other._direction) and equal(self._origin, other._origin)
+        return equal(self.direction, other.direction) and equal(self.origin, other.origin)
 
     def transform(self, matrix: np.ndarray) -> Ray:
-        orig: np.ndarray = matrix.dot(self._origin)
-        direct: np.ndarray = matrix.dot(self._direction)
+        orig: np.ndarray = matrix.dot(self.origin)
+        direct: np.ndarray = matrix.dot(self.direction)
         return Ray(orig, direct)
 
     def intersect(self, s: WorldObject) -> Sequence[Intersection]:
         # tranform the ray, equivalent to self.transform
-        invt = s._inv_transform
-        origin: np.ndarray = invt.dot(self._origin)
-        direction: np.ndarray = invt.dot(self._direction)
+        invt = s.inv_transform
+        origin: np.ndarray = invt.dot(self.origin)
+        direction: np.ndarray = invt.dot(self.direction)
 
         # sphere_to_ray = origin - point(0.0, 0.0, 0.0)
         sphere_to_ray = origin.copy()
@@ -89,6 +82,15 @@ class Ray:
         return Intersection(r1, s), Intersection(r2, s)
 
 
+class Computations:
+    __slots__ = ("t", "object", "point")
+
+    def __init__(self, intersection: Intersection, ray: Ray) -> None:
+        self.t: float = intersection.t
+        self.object: WorldObject = intersection.object
+        self.point: np.ndarray = ray.position(intersection.t)
+
+
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     it: Optional[Intersection] = None
     i: Intersection
@@ -104,8 +106,19 @@ def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     return it
 
 
+def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
+    if intersections is None or len(intersections == 0):
+        return None
+
+    temp = Intersection(0, None)
+
+    index = bisect_left(intersections, temp)
+
+    return intersections[index]
+
+
 def normal_at(object: WorldObject, p: np.ndarray) -> np.ndarray:
-    tinv = object._inv_transform
+    tinv = object.inv_transform
     object_point: np.ndarray = tinv.dot(p)
     # object_normal = object_point - point(0.0, 0.0, 0.0)
     object_normal: np.ndarray = object_point.copy()

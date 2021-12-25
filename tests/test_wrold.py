@@ -1,4 +1,14 @@
-from fancy_ray_tracer import Light, Sphere, World, make_color, point, scaling
+from fancy_ray_tracer import (
+    Light,
+    Ray,
+    Sphere,
+    World,
+    make_color,
+    point,
+    scaling,
+    vector,
+)
+from fancy_ray_tracer.constants import ATOL
 
 SPHERE_CACHE = {}
 DEFAULT_KEY = 'default'
@@ -41,3 +51,14 @@ def test_world():
     assert w.light == light
     assert w.has_object(s1)
     assert w.has_object(s2)
+
+
+def test_world_intersection():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    xs = w.intersec(r)
+    assert len(xs) == 4
+    assert abs(xs[0].t - 4) < ATOL
+    assert abs(xs[1].t - 4.5) < ATOL
+    assert abs(xs[2].t - 5.5) < ATOL
+    assert abs(xs[3].t - 6) < ATOL
