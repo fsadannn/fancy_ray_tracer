@@ -9,6 +9,7 @@ from fancy_ray_tracer import (
     ray,
     scaling,
 )
+from fancy_ray_tracer.canvas import CanvasImg
 
 canvas_pixels = 400
 ray_origin = point(0, 0, -5)
@@ -17,7 +18,7 @@ wall_size = 7.0
 pixel_size = wall_size / canvas_pixels
 half = wall_size / 2
 
-cv = Canvas((canvas_pixels, canvas_pixels))
+cv = CanvasImg('materials.jpg', (canvas_pixels, canvas_pixels))
 
 color = make_color(1, 0, 0)
 shape = Sphere()
@@ -36,7 +37,7 @@ for y in range(canvas_pixels - 1):
 
         position = point(world_x, world_y, wall_z)
         r = ray.Ray(ray_origin, normalize(position - ray_origin))
-        xs = ray.intersect(shape, r)
+        xs = r.intersect(shape)
         hit = ray.hit(xs)
         if hit is not None:
             hit_point = r.position(hit.t)

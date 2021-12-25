@@ -151,3 +151,7 @@ dmypy.json
 
 # others
 *.jpg
+*.profile
+*.lprof
+*.prof
+garbage.py

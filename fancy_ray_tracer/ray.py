@@ -1,14 +1,36 @@
 from __future__ import annotations
 
-from math import sqrt
+from math import pow, sqrt
 from typing import Optional, Sequence
 
 import numpy as np
 
 from .constants import ATOL
 from .protocols import WorldObject
-from .tuples import normalize, point
+# from .tuples import normalize, point
 from .utils import equal
+
+
+class Intersection:
+    __slots__ = ("_t", "_object")
+
+    def __init__(self, t: float, object: WorldObject):
+        self._t: float = t
+        self._object: WorldObject = object
+
+    @property
+    def object(self) -> WorldObject:
+        return self._object
+
+    @property
+    def t(self) -> float:
+        return self._t
+
+    def __eq__(self, other: Intersection) -> bool:
+        if not isinstance(other, Intersection):
+            raise NotImplementedError
+
+        return abs(self._t - other._t) < ATOL and self._object == other._object
 
 
 class Ray:
@@ -35,47 +57,36 @@ class Ray:
 
         return equal(self._direction, other._direction) and equal(self._origin, other._origin)
 
+    def transform(self, matrix: np.ndarray) -> Ray:
+        orig: np.ndarray = matrix.dot(self._origin)
+        direct: np.ndarray = matrix.dot(self._direction)
+        return Ray(orig, direct)
 
-class Intersection:
-    __slots__ = ("_t", "_object")
+    def intersect(self, s: WorldObject) -> Sequence[Intersection]:
+        # tranform the ray, equivalent to self.transform
+        invt = s._inv_transform
+        origin: np.ndarray = invt.dot(self._origin)
+        direction: np.ndarray = invt.dot(self._direction)
 
-    def __init__(self, t: float, object: WorldObject):
-        self._t: float = t
-        self._object: WorldObject = object
+        # sphere_to_ray = origin - point(0.0, 0.0, 0.0)
+        sphere_to_ray = origin.copy()
+        sphere_to_ray[3] = 0.0
 
-    @property
-    def object(self) -> WorldObject:
-        return self._object
+        a: float = direction.dot(direction)
+        b: float = 2.0 * direction.dot(sphere_to_ray)
+        c: float = sphere_to_ray.dot(sphere_to_ray) - 1
+        dc = pow(b, 2.0) - 4.0 * a * c
 
-    @property
-    def t(self) -> float:
-        return self._t
+        if dc < 0:
+            return ()
 
-    def __eq__(self, other: Intersection) -> bool:
-        if not isinstance(other, Intersection):
-            raise NotImplementedError
+        dcsq = sqrt(dc)
+        a12 = 1.0 / (2.0 * a)
 
-        return abs(self._t - other._t) < ATOL and self._object == other._object
+        r1 = (-b - dcsq) * a12
+        r2 = (-b + dcsq) * a12
 
-
-def intersect(s: WorldObject, r: Ray) -> Sequence[Intersection]:
-    ray2 = transform(r, s.inv_transform)
-
-    sphere_to_ray = ray2.origin - point(0.0, 0.0, 0.0)
-    a = ray2.direction.dot(ray2.direction)
-    b = 2 * ray2.direction.dot(sphere_to_ray)
-    c = sphere_to_ray.dot(sphere_to_ray) - 1
-    dc = b**2 - 4 * a * c
-
-    if dc < 0:
-        return ()
-
-    dcsq = sqrt(dc)
-
-    r1 = (-b - dcsq) / (2 * a)
-    r2 = (-b + dcsq) / (2 * a)
-
-    return Intersection(r1, s), Intersection(r2, s)
+        return Intersection(r1, s), Intersection(r2, s)
 
 
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
@@ -93,17 +104,16 @@ def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     return it
 
 
-def transform(ray: Ray, matrix: np.ndarray) -> Ray:
-    orig: np.ndarray = matrix.dot(ray._origin)
-    direct: np.ndarray = matrix.dot(ray._direction)
-    return Ray(orig, direct)
-
-
 def normal_at(object: WorldObject, p: np.ndarray) -> np.ndarray:
-    tinv = object.inv_transform
-    object_point = tinv.dot(p)
-    object_normal = object_point - point(0.0, 0.0, 0.0)
-    world_normal = tinv.T.dot(object_normal)
-    world_normal[3] = 0
-    world_normal = normalize(world_normal)
+    tinv = object._inv_transform
+    object_point: np.ndarray = tinv.dot(p)
+    # object_normal = object_point - point(0.0, 0.0, 0.0)
+    object_normal: np.ndarray = object_point.copy()
+    object_normal[3] = 0.0
+    world_normal: np.ndarray = tinv.T.dot(object_normal)
+    world_normal[3] = 0.0
+    # normalize inplace
+    # world_normal = normalize(world_normal)
+    nm: float = sqrt(world_normal.dot(world_normal))
+    world_normal *= (1.0 / nm)
     return world_normal
