@@ -2,6 +2,7 @@ from fancy_ray_tracer import (
     Canvas,
     Light,
     Sphere,
+    lighting,
     make_color,
     normalize,
     point,
@@ -41,8 +42,8 @@ for y in range(canvas_pixels - 1):
             hit_point = r.position(hit.t)
             normal = ray.normal_at(hit.object, hit_point)
             eye = -r.direction
-            color = ray.lighting(hit.object.material,
-                                 light, hit_point, eye, normal)
+            color = lighting(hit.object.material,
+                             light, hit_point, eye, normal)
             cv.set_pixelf(x, y, color.tolist())
 
 cv.run()

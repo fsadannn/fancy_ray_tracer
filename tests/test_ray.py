@@ -5,15 +5,16 @@ from fancy_ray_tracer import (
     constants,
     equal,
     make_sphere,
+    normal_at,
+    normalize,
     point,
+    reflect,
     scaling,
     transform,
     translation,
     vector,
 )
 from fancy_ray_tracer.matrices import identity, rotZ
-from fancy_ray_tracer.ray import normal_at, reflect
-from fancy_ray_tracer.tuples import normalize
 
 
 def test_ray():
