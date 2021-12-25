@@ -1,4 +1,4 @@
-from math import cos, sin
+from math import cos, sin, sqrt
 
 import numpy as np
 
@@ -74,3 +74,23 @@ def sharing(xy: float, xz: float, yx: float, yz: float, zx: float, zy: float) ->
     eye[2, 0] = zx
     eye[2, 1] = zy
     return eye
+
+
+def view_transform(fromp: np.ndarray, to: np.ndarray, up: np.ndarray) -> np.ndarray:
+    forward: np.ndarray = to - fromp
+    forward = forward[:3]
+    nm: float = sqrt(forward.dot(forward))
+    forward *= 1 / nm
+    upn = up
+    nm: float = sqrt(up.dot(up))
+    upn *= 1 / nm
+    left: np.ndarray = np.cross(forward, upn[:3])
+    true_up = np.cross(left, forward)
+    orientation = np.zeros((4, 4))
+    orientation[0, :3] = left
+    orientation[1, :3] = true_up
+    orientation[2, :3] = -forward
+    orientation[3, 3] = 1
+    trans: np.ndarray = np.eye(4, 4)
+    trans[:3, 3] = -fromp[:3]
+    return orientation.dot(trans)

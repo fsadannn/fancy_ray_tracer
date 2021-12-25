@@ -3,7 +3,6 @@ from __future__ import annotations
 from bisect import bisect_left
 from functools import total_ordering
 from math import pow, sqrt
-from operator import truediv
 from typing import Optional, Sequence
 
 import numpy as np

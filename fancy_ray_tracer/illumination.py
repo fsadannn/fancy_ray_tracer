@@ -36,8 +36,7 @@ def lighting(material: Material, light: Light, point: np.ndarray,
     # normalization inplace, equivalent to
     # lightv = normalize(light.position - point)
     lightv: np.ndarray = light.position - point
-    nm: float = sqrt(lightv.dot(lightv))
-    lightv *= (1.0 / nm)
+    lightv *= (1.0 / sqrt(lightv.dot(lightv)))
     # compute the ambient contribution
     ambient = effective_color * material.ambient
     # light_dot_normal represents the cosine of the angle between the
@@ -58,9 +57,10 @@ def lighting(material: Material, light: Light, point: np.ndarray,
     # write reflect inplace for speed equivalen to
     # reflectv = reflect(-lightv, normalv)
     lightvn: np.ndarray = -lightv
-    reflectv: np.ndarray = lightvn - (2.0 * lightvn.dot(normalv)) * normalv
+    #reflectv: np.ndarray = lightvn - (2.0 * lightvn.dot(normalv)) * normalv
 
-    reflect_dot_eye: float = reflectv.dot(eyev)
+    reflect_dot_eye: float = (
+        lightvn - (2.0 * lightvn.dot(normalv)) * normalv).dot(eyev)
 
     if reflect_dot_eye <= 0:
         # specular = 0
@@ -68,8 +68,8 @@ def lighting(material: Material, light: Light, point: np.ndarray,
     # else:
 
     # compute the specular contribution
-    factor = pow(reflect_dot_eye, material.shininess)
-    specular = light.intensity * material.specular * factor
+    specular = light.intensity * material.specular * \
+        pow(reflect_dot_eye, material.shininess)
 
     # Add the three contributions together to get the final shading
     return ambient + diffuse + specular

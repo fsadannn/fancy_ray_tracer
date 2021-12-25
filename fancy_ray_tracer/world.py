@@ -14,13 +14,14 @@ from fancy_ray_tracer.tuples import make_color
 
 from .illumination import Light, lighting
 from .protocols import WorldObject
-from .ray import Computations, Intersection, Ray, hit, hit_sorted
+from .ray import Computations, Intersection, Ray, hit_sorted
 
 
 class World:
     __slots__ = ("light", 'objects', '_objects_ids')
 
-    def __init__(self, light: Union[Light, Iterable[Light]] = [], objects: Iterable[WorldObject] = []) -> None:
+    def __init__(self, light: Union[Light, Iterable[Light]] = (),
+                 objects: Iterable[WorldObject] = ()) -> None:
         if isinstance(light, Iterable):
             self.light: MutableSequence[Light] = list(light)
         else:
