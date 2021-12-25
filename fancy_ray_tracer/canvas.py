@@ -97,6 +97,11 @@ class Canvas:
     def set_pixel(self, x: int, y: int, color: ColorInput):
         self._screen.set_at((x, y), color)
 
+    def set_pixelf(self, x: int, y: int, color: Tuple[float, float, float]):
+        new_color = (min(int(color[0] * 255), 255),
+                     min(int(color[1] * 255), 255), min(int(color[2] * 255), 255))
+        self._screen.set_at((x, y), new_color)
+
     def get_pixel(self, x: int, y: int) -> RgbaOutput:
         return self._screen.get_at((x, y))
 

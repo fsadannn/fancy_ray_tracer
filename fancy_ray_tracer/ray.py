@@ -36,16 +36,23 @@ class Ray:
 
 
 class Sphere:
-    __slots__ = ("_id", '_transform', 'material')
+    __slots__ = ("_id", '_transform', 'material', '_inv_transform')
 
     def __init__(self, sphereId: Optional[str] = None):
         self._id: str = sphereId if sphereId else rand_id()
         self._transform: np.ndarray = identity()
         self.material = make_material()
+        self._inv_transform: np.ndarray = None
 
     @property
     def transform(self) -> np.ndarray:
         return self._transform
+
+    @property
+    def inv_transform(self) -> np.ndarray:
+        if self._inv_transform is None:
+            self._inv_transform = inverse(self._transform)
+        return self._inv_transform
 
     @property
     def id(self) -> str:
@@ -127,13 +134,13 @@ def make_sphere() -> Sphere:
 
 
 def make_material() -> Material:
-    return Material(np.array([1, 1, 1]), 0.1, 0.9, 0.9, 200.0)
+    return Material(np.array([1.0, 1.0, 1.0]), 0.1, 0.9, 0.9, 200.0)
 
 
 def intersect(s: Sphere, r: Ray) -> Sequence[Intersection]:
-    ray2 = transform(r, inverse(s.transform))
+    ray2 = transform(r, s.inv_transform)
 
-    sphere_to_ray = ray2.origin - point(0, 0, 0)
+    sphere_to_ray = ray2.origin - point(0.0, 0.0, 0.0)
     a = ray2.direction.dot(ray2.direction)
     b = 2 * ray2.direction.dot(sphere_to_ray)
     c = sphere_to_ray.dot(sphere_to_ray) - 1
@@ -172,9 +179,9 @@ def transform(ray: Ray, matrix: np.ndarray) -> Ray:
 
 
 def normal_at(sphere: Sphere, p: np.ndarray) -> np.ndarray:
-    tinv = inverse(sphere.transform)
+    tinv = sphere.inv_transform
     object_point = tinv.dot(p)
-    object_normal = object_point - point(0, 0, 0)
+    object_normal = object_point - point(0.0, 0.0, 0.0)
     world_normal = tinv.T.dot(object_normal)
     world_normal[3] = 0
     world_normal = normalize(world_normal)
