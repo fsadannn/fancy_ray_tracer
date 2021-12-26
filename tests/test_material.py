@@ -69,3 +69,8 @@ def test_pattern():
     c2 = lighting(s, light, point(1.1, 0, 0), eyev, normalv, in_shadow)
     assert equal(c1, make_color(1, 1, 1))
     assert equal(c2, make_color(0, 0, 0))
+
+
+def test_reflective():
+    m = make_material()
+    assert m.reflective == 0

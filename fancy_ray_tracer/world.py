@@ -11,11 +11,13 @@ from typing import (
 
 import numpy as np
 
-from fancy_ray_tracer.tuples import make_color, point
-
+from .constants import EPSILON, RAY_REFLECTION_LIMIT
 from .illumination import Light, lighting
 from .protocols import WorldObject
 from .ray import Computations, Intersection, Ray, hit_sorted
+from .tuples import make_color
+
+_BLACK = make_color(0, 0, 0)
 
 
 class World:
@@ -54,7 +56,7 @@ class World:
         obj: WorldObject
         for obj in self.objects:
             intersects = ray.intersect(obj)
-            if intersects:
+            if len(intersects) != 0:
                 intersections.extend(intersects)
 
         if len(intersections) == 0:
@@ -63,16 +65,19 @@ class World:
         intersections.sort()
         return intersections
 
-    def shade_hit(self, cmp: Computations) -> np.ndarray:
+    def shade_hit(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
         if len(self.light) == 1:
             in_shadow = self._is_shadowed(
                 cmp.over_point, self.light[0].position)
-            return lighting(cmp.object, self.light[0],
-                            cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
+            surface = lighting(cmp.object, self.light[0],
+                               cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
+            reflected = self.reflected_color(cmp, remaining)
+            return surface + reflected
 
         if len(self.light) == 0:
-            return make_color(0, 0, 0)
+            return _BLACK
 
+        reflected = self.reflected_color(cmp, remaining)
         in_shadow = self._is_shadowed(cmp.over_point, self.light[0].position)
         color = lighting(cmp.object, self.light[0],
                          cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
@@ -82,16 +87,16 @@ class World:
             color += lighting(cmp.object, light,
                               cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
 
-        return color
+        return color + reflected
 
-    def color_at(self, ray: Ray) -> np.ndarray:
+    def color_at(self, ray: Ray, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
         intersections: Sequence[Intersection] = self.intersec(ray)
         it: Optional[Intersection] = hit_sorted(intersections)
 
         if it is None:
-            return make_color(0, 0, 0)
+            return _BLACK
 
-        return self.shade_hit(Computations(it, ray))
+        return self.shade_hit(Computations(it, ray), remaining)
 
     def is_shadowed(self, p: np.ndarray) -> bool:
         if len(self.light) == 1:
@@ -117,3 +122,11 @@ class World:
         h = hit_sorted(intersects)
 
         return h is not None and h.t < distance
+
+    def reflected_color(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
+        if cmp.object.material.reflective < EPSILON or remaining <= 0:
+            return _BLACK
+
+        reflect_ray = Ray(cmp.over_point, cmp.reflectv)
+        color = self.color_at(reflect_ray, remaining - 1)
+        return color * cmp.object.material.reflective

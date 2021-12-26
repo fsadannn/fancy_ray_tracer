@@ -1,3 +1,5 @@
+from math import sqrt
+
 from fancy_ray_tracer import Intersection, Ray, Sphere, point, scaling, vector
 from fancy_ray_tracer.constants import ATOL
 from fancy_ray_tracer.matrices import translation
@@ -137,3 +139,11 @@ def test_plane_ray_below():
     assert len(xs) == 1
     assert abs(xs[0].t - 1) < ATOL
     assert xs[0].object == p
+
+
+def test_reflection():
+    p = Plane()
+    r = Ray(point(0, 1, -1), vector(0, -sqrt(2) / 2, sqrt(2) / 2))
+    i = Intersection(sqrt(2), p)
+    cmp = Computations(i, r)
+    assert equal(cmp.reflectv, vector(0, sqrt(2) / 2, sqrt(2) / 2))

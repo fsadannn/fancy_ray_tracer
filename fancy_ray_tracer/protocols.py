@@ -35,6 +35,7 @@ class MaterialP(ColorAtPoint, Protocol):
     specular: float
     shininess: float
     pattern: Optional[Pattern]
+    reflective: float
 
     def __eq__(self, other: MaterialP) -> bool:
         raise NotImplementedError

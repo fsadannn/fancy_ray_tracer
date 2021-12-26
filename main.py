@@ -5,19 +5,24 @@ floor = Plane()
 floor.material = make_material()
 floor.material.color = make_color(1, 0.9, 0.9)
 floor.material.specular = 0.0
-floor.material.pattern = StripePattern(
-    make_color(1, 0, 0), make_color(1, 1, 1))
+#floor.material.reflective = 0.8
+floor.material.pattern = ChessPattern(
+    make_color(0, 0, 0), make_color(1, 1, 1))
 
 
 left_wall = Plane()
 left_wall.set_transform(chain_ops(
     [translation(0, 0, 5), rotY(-PI / 4), rotX(PI / 2)]))
-left_wall.material = floor.material
+left_wall.material = make_material()
+left_wall.material.color = make_color(1, 0.9, 0.9)
+left_wall.material.specular = 0.0
+left_wall.material.pattern = ChessPattern(
+    make_color(0, 0, 0), make_color(1, 1, 1))
 
 right_wall = Plane()
 right_wall.set_transform(chain_ops(
     [translation(0, 0, 5), rotY(PI / 4), rotX(PI / 2)]))
-right_wall.material = floor.material
+right_wall.material = left_wall.material
 
 
 middle = Sphere()
@@ -26,9 +31,7 @@ middle.material = make_material()
 middle.material.color = make_color(0.1, 1, 0.5)
 middle.material.diffuse = 0.7
 middle.material.specular = 0.3
-middle.material.pattern = ChessPattern(
-    make_color(0, 0, 1), make_color(1, 1, 1))
-
+middle.material.reflective = 0.8
 
 right = Sphere()
 right.set_transform(
@@ -37,8 +40,6 @@ right.material = make_material()
 right.material.color = make_color(0.5, 1, 0.1)
 right.material.diffuse = 0.7
 right.material.specular = 0.3
-right.material.pattern = LinearGradient(
-    make_color(0, 1, 0), make_color(1, 1, 1))
 
 
 left = Sphere()
@@ -64,7 +65,7 @@ camera.set_transform(view_transform(
     point(0, 1.5, -5), point(0, 1, 0), vector(0, 1, 0)))
 
 canvas = Canvas((hsize, vsize))
-# canvas = CanvasImg('scene.jpg', (hsize, vsize))
+#canvas = CanvasImg('scene.jpg', (hsize, vsize))
 
 camera.render(world, canvas)
 

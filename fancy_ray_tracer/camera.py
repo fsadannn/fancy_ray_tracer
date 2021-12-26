@@ -3,12 +3,11 @@ from typing import Optional, Union
 
 import numpy as np
 
-from fancy_ray_tracer.utils import colorf_to_color
-
 from .canvas import Canvas, CanvasImg
 from .matrices import inverse
 from .ray import Ray
 from .tuples import point
+from .utils import colorf_to_color
 from .world import World
 
 
@@ -48,7 +47,8 @@ class Camera:
         world_x: float = self.half_width - xoffset
         world_y: float = self.half_height - yoffset
 
-        pixel: np.ndarray = self.inv_transform.dot(point(world_x, world_y, -1))
+        # pixel: np.ndarray = self.inv_transform.dot(point(world_x, world_y, -1))
+        pixel: np.ndarray = self.inv_transform.dot((world_x, world_y, -1, 1))
         origin = self.inv_transform[:, 3]
         direction: np.ndarray = pixel - origin
         nm: float = sqrt(direction.dot(direction))

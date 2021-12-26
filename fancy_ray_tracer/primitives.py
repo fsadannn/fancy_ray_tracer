@@ -5,11 +5,10 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from fancy_ray_tracer.protocols import WorldObject
-
 from .constants import EPSILON
 from .materials import make_material
-from .matrices import identity, inverse
+from .matrices import identity
+from .protocols import WorldObject
 from .ray import Intersection
 from .tuples import vector
 from .utils import rand_id

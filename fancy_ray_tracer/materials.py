@@ -5,10 +5,9 @@ from typing import Optional
 
 import numpy as np
 
-from fancy_ray_tracer.matrices import identity
-from fancy_ray_tracer.protocols import MaterialP, Pattern
-
 from .constants import EPSILON
+from .matrices import identity
+from .protocols import MaterialP, Pattern
 from .utils import equal
 
 
@@ -97,15 +96,16 @@ class ChessPattern(DefaultPattern):
 
 class Material(MaterialP):  # pylint: disable=too-few-public-methods,too-many-arguments
     __slots__ = ("color", "ambient", "diffuse",
-                 "specular", "shininess", "pattern")
+                 "specular", "shininess", "reflective", "pattern")
 
     def __init__(self, color: np.ndarray, ambient: float,
-                 diffuse: float, specular: float, shininess: float, pattern: Optional[Pattern] = None):
+                 diffuse: float, specular: float, shininess: float, reflective: float = 0, pattern: Optional[Pattern] = None):
         self.color: np.ndarray = color
         self.ambient: float = ambient
         self.diffuse: float = diffuse
         self.specular: float = specular
         self.shininess: float = shininess
+        self.reflective = reflective
         self.pattern: Optional[Pattern] = pattern
 
     def color_at(self, point: np.ndarray) -> np.ndarray:

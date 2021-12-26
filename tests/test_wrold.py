@@ -1,3 +1,4 @@
+from math import sqrt
 from typing import List
 
 from fancy_ray_tracer import (
@@ -14,6 +15,7 @@ from fancy_ray_tracer import (
 from fancy_ray_tracer.constants import ATOL
 from fancy_ray_tracer.illumination import lighting
 from fancy_ray_tracer.matrices import translation
+from fancy_ray_tracer.primitives import Plane
 from fancy_ray_tracer.ray import Computations, Intersection, hit_sorted
 
 SPHERE_CACHE = {}
@@ -170,3 +172,28 @@ def test_shade_hit():
     cmp = Computations(i, r)
     c = w.shade_hit(cmp)
     assert equal(c, make_color(0.1, 0.1, 0.1))
+
+
+def test_reflection_nonreflective():
+    w = make_default_world()
+    r = Ray(point(0, 0, 0), vector(0, 0, 1))
+    s = w.objects[1]
+    s.material.ambient = 1
+    i = Intersection(1, s)
+    cmp = Computations(i, r)
+    assert equal(w.reflected_color(cmp), make_color(0, 0, 0))
+
+
+def test_non_infinity_recursion():
+    w = make_default_world()
+    w.light = [Light(point(0, 0, 0), make_color(1, 1, 1))]
+    lower = Plane()
+    lower.material.reflective = 1
+    lower.set_transform(translation(0, -1, 0))
+    w.add_object(lower)
+    upper = Plane()
+    upper.material.reflective = 1
+    upper.set_transform(translation(0, 1, 0))
+    w.add_object(upper)
+    r = Ray(point(0, 0, 0), vector(0, 0, 1))
+    c = w.color_at(r)
