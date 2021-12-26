@@ -67,19 +67,19 @@ class World:
         if len(self.light) == 1:
             in_shadow = self._is_shadowed(
                 cmp.over_point, self.light[0].position)
-            return lighting(cmp.object.material, self.light[0],
+            return lighting(cmp.object, self.light[0],
                             cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
 
         if len(self.light) == 0:
             return make_color(0, 0, 0)
 
         in_shadow = self._is_shadowed(cmp.over_point, self.light[0].position)
-        color = lighting(cmp.object.material, self.light[0],
+        color = lighting(cmp.object, self.light[0],
                          cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
         light: Light
         for light in self.light[1:]:
             in_shadow = self._is_shadowed(cmp.over_point, light.position)
-            color += lighting(cmp.object.material, light,
+            color += lighting(cmp.object, light,
                               cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
 
         return color

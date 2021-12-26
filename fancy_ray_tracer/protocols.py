@@ -1,11 +1,43 @@
 from __future__ import annotations
 
-from typing import Protocol, Sequence
+from typing import Optional, Protocol, Sequence
 
 import numpy as np
 
-from .materials import Material
-from .utils import rand_id
+from .matrices import inverse
+
+
+class Transformable(Protocol):
+    transform: np.ndarray
+    inv_transform: np.ndarray
+
+    def set_transform(self, transform: np.ndarray) -> None:
+        self.transform = transform
+        self.inv_transform = inverse(self.transform)
+
+
+class ColorAtPoint(Protocol):
+    def color_at(self, point: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+
+class Pattern(Transformable, ColorAtPoint, Protocol):
+    name: str
+
+    def __eq__(self, other: Pattern) -> bool:
+        raise NotImplementedError
+
+
+class MaterialP(ColorAtPoint, Protocol):
+    color: np.ndarray
+    ambient: float
+    diffuse: float
+    specular: float
+    shininess: float
+    pattern: Optional[Pattern]
+
+    def __eq__(self, other: MaterialP) -> bool:
+        raise NotImplementedError
 
 
 class IntersectionP(Protocol):
@@ -13,14 +45,9 @@ class IntersectionP(Protocol):
     object: WorldObject
 
 
-class WorldObject(Protocol):
-    id: str = rand_id()
-    transform: np.ndarray
-    material: Material
-    inv_transform: np.ndarray
-
-    def set_transform(self, transform: np.ndarray) -> None:
-        raise NotImplementedError
+class WorldObject(Transformable, ColorAtPoint, Protocol):
+    id: str
+    material: MaterialP
 
     def __eq__(self, other: WorldObject) -> bool:
         raise NotImplementedError

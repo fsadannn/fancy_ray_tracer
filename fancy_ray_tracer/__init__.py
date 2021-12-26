@@ -1,7 +1,14 @@
 from .camera import Camera
 from .canvas import Canvas, CanvasImg
 from .illumination import Light, lighting, reflect
-from .materials import Material, make_material
+from .materials import (
+    ChessPattern,
+    LinearGradient,
+    Material,
+    RingPatter,
+    StripePattern,
+    make_material,
+)
 from .matrices import rotX, rotY, rotZ, scaling, sharing, translation, view_transform
 from .primitives import Plane, Sphere
 from .protocols import WorldObject

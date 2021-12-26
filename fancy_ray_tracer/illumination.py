@@ -4,8 +4,7 @@ from math import pow, sqrt
 
 import numpy as np
 
-from .materials import Material
-# from .tuples import normalize
+from .protocols import WorldObject
 from .utils import equal
 
 
@@ -27,10 +26,12 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
     return v - (2 * v.dot(n)) * n
 
 
-def lighting(material: Material, light: Light, point: np.ndarray,
+def lighting(object: WorldObject, light: Light, point: np.ndarray,
              eyev: np.ndarray, normalv: np.ndarray, in_shadow: bool = False):
     # combine the surface color with the light's color/intensity
-    effective_color = material.color * light.intensity
+    material = object.material
+    color = object.color_at(point)
+    effective_color = color * light.intensity
 
     # compute the ambient contribution
     ambient = effective_color * material.ambient

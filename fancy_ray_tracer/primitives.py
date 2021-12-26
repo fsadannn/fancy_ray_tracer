@@ -5,10 +5,11 @@ from typing import Optional, Sequence
 
 import numpy as np
 
+from fancy_ray_tracer.protocols import WorldObject
+
 from .constants import EPSILON
 from .materials import make_material
 from .matrices import identity, inverse
-from .protocols import WorldObject
 from .ray import Intersection
 from .tuples import vector
 from .utils import rand_id
@@ -23,11 +24,11 @@ class Shape(WorldObject):
         self.material = make_material()
         self.inv_transform: np.ndarray = self.transform
 
-    def set_transform(self, transform: np.ndarray):
-        self.transform = transform
-        self.inv_transform = inverse(self.transform)
+    def color_at(self, point: np.ndarray) -> np.ndarray:
+        point = self.inv_transform.dot(point)
+        return self.material.color_at(point)
 
-    def __eq__(self, other: Sphere) -> bool:
+    def __eq__(self, other: WorldObject) -> bool:
         return self.id == other.id
 
     def normal_at(self, p: np.ndarray) -> np.ndarray:

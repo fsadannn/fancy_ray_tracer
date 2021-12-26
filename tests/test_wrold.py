@@ -76,7 +76,7 @@ def test_world_shading():
     shape = w.objects[0]
     i = Intersection(4, shape)
     cmp = Computations(i, r)
-    c = lighting(cmp.object.material, w.light[0],
+    c = lighting(cmp.object, w.light[0],
                  cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.38066, 0.47583, 0.2855))
 
@@ -88,7 +88,7 @@ def test_world_shading_inside():
     shape = w.objects[1]
     i = Intersection(0.5, shape)
     cmp = Computations(i, r)
-    c = lighting(cmp.object.material, w.light[0],
+    c = lighting(cmp.object, w.light[0],
                  cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.90498, 0.90498, 0.90498))
 
@@ -102,7 +102,7 @@ def test_world_color_ray_miss():
         c = make_color(0, 0, 0)
     else:
         cmp = Computations(it, r)
-        c = lighting(cmp.object.material, w.light[0],
+        c = lighting(cmp.object, w.light[0],
                      cmp.point, cmp.eyev, cmp.normalv, False)
 
     assert equal(c, make_color(0, 0, 0))
@@ -117,7 +117,7 @@ def test_world_color_ray_hits():
         c = make_color(0, 0, 0)
     else:
         cmp = Computations(it, r)
-        c = lighting(cmp.object.material, w.light[0],
+        c = lighting(cmp.object, w.light[0],
                      cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.38066, 0.47583, 0.2855))
 
