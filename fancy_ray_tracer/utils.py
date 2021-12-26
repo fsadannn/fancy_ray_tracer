@@ -34,7 +34,7 @@ def equal(a: np.ndarray, b: np.ndarray) -> bool:
 
 
 def is_vector(a: np.ndarray) -> bool:
-    return a[3] < RTOL
+    return a[3] < ATOL
 
 
 def colorf_to_color(color: Union[np.ndarray, Tuple[float, float, float]]) -> Tuple[int, int, int]:

@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from .constants import ATOL
+from .constants import EPSILON
 from .protocols import WorldObject
 # from .tuples import normalize, point
 from .utils import equal
@@ -25,7 +25,7 @@ class Intersection:
         if not isinstance(other, Intersection):
             raise NotImplementedError
 
-        return abs(self.t - other.t) < ATOL and self.object == other.object
+        return abs(self.t - other.t) < EPSILON and self.object == other.object
 
     def __lt__(self, other: Intersection):
         if not isinstance(other, Intersection):
@@ -60,26 +60,7 @@ class Ray:
         invt = s.inv_transform
         origin: np.ndarray = invt.dot(self.origin)
         direction: np.ndarray = invt.dot(self.direction)
-
-        # sphere_to_ray = origin - point(0.0, 0.0, 0.0)
-        sphere_to_ray = origin.copy()
-        sphere_to_ray[3] = 0.0
-
-        a: float = direction.dot(direction)
-        b: float = 2.0 * direction.dot(sphere_to_ray)
-        c: float = sphere_to_ray.dot(sphere_to_ray) - 1
-        dc = pow(b, 2.0) - 4.0 * a * c
-
-        if dc < 0:
-            return ()
-
-        dcsq = sqrt(dc)
-        a12 = 1.0 / (2.0 * a)
-
-        r1 = (-b - dcsq) * a12
-        r2 = (-b + dcsq) * a12
-
-        return Intersection(r1, s), Intersection(r2, s)
+        return s.intersect(origin, direction)
 
 
 class Computations:
@@ -97,7 +78,7 @@ class Computations:
             self.normalv = -self.normalv
         else:
             self.inside = False
-        self.over_point: np.ndarray = self.point + self.normalv * ATOL
+        self.over_point: np.ndarray = self.point + self.normalv * EPSILON
 
 
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
@@ -133,8 +114,7 @@ def normal_at(object: WorldObject, p: np.ndarray) -> np.ndarray:
     tinv = object.inv_transform
     object_point: np.ndarray = tinv.dot(p)
     # object_normal = object_point - point(0.0, 0.0, 0.0)
-    object_normal: np.ndarray = object_point.copy()
-    object_normal[3] = 0.0
+    object_normal: np.ndarray = object.normal_at(object_point)
     world_normal: np.ndarray = tinv.T.dot(object_normal)
     world_normal[3] = 0.0
     # normalize inplace

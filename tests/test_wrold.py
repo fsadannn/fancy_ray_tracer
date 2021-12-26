@@ -27,7 +27,7 @@ def make_default_light():
     return light
 
 
-def make_spheres():
+def Spheres():
     if DEFAULT_KEY in SPHERE_CACHE:
         return SPHERE_CACHE[DEFAULT_KEY]
 
@@ -45,7 +45,7 @@ def make_spheres():
 
 def make_default_world():
     light = make_default_light()
-    spheres = make_spheres()
+    spheres = Spheres()
     w = World(light, spheres)
     return w
 
@@ -53,7 +53,7 @@ def make_default_world():
 def test_world():
     light = make_default_light()
     w = make_default_world()
-    s1, s2 = make_spheres()
+    s1, s2 = Spheres()
     assert w.light[0] == light
     assert w.has_object(s1)
     assert w.has_object(s2)

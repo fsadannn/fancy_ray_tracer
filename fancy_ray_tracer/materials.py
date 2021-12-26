@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .constants import ATOL
+from .constants import EPSILON
 from .utils import equal
 
 
@@ -21,10 +21,10 @@ class Material:  # pylint: disable=too-few-public-methods,too-many-arguments
         if not isinstance(other, Material):
             raise NotImplementedError
 
-        return equal(self.color, other.color) and abs(self.ambient - other.ambient) < ATOL \
-            and abs(self.diffuse - other.diffuse) < ATOL \
-            and abs(self.specular - other.specular) < ATOL \
-            and abs(self.shininess - other.shininess) < ATOL
+        return equal(self.color, other.color) and abs(self.ambient - other.ambient) < EPSILON \
+            and abs(self.diffuse - other.diffuse) < EPSILON \
+            and abs(self.specular - other.specular) < EPSILON \
+            and abs(self.shininess - other.shininess) < EPSILON
 
 
 def make_material() -> Material:

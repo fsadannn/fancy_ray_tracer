@@ -1,8 +1,8 @@
-from fancy_ray_tracer import Intersection, hit, make_sphere
+from fancy_ray_tracer import Intersection, hit, Sphere
 
 
 def test_hit_positive():
-    s = make_sphere()
+    s = Sphere()
     i1 = Intersection(1, s)
     i2 = Intersection(2, s)
     i = hit([i1, i2])
@@ -10,7 +10,7 @@ def test_hit_positive():
 
 
 def test_hit_some_negative():
-    s = make_sphere()
+    s = Sphere()
     i1 = Intersection(-1, s)
     i2 = Intersection(2, s)
     i = hit([i1, i2])
@@ -18,7 +18,7 @@ def test_hit_some_negative():
 
 
 def test_hit_all_negative():
-    s = make_sphere()
+    s = Sphere()
     i1 = Intersection(-2, s)
     i2 = Intersection(-1, s)
     i = hit([i1, i2])
@@ -26,7 +26,7 @@ def test_hit_all_negative():
 
 
 def test_hit():
-    s = make_sphere()
+    s = Sphere()
     i1 = Intersection(5, s)
     i2 = Intersection(7, s)
     i3 = Intersection(-3, s)
