@@ -1,6 +1,6 @@
 from base64 import b64encode
 from os import urandom
-from typing import Sequence
+from typing import Sequence, Tuple, Union
 
 import numpy as np
 
@@ -10,8 +10,8 @@ from .constants import ATOL, RTOL
 def chain_ops(ops: Sequence[np.ndarray]) -> np.ndarray:
     if len(ops) == 0:
         return np.eye(4, 4)
-    res: np.ndarray = ops[0]
-    for op in ops[1:]:
+    res: np.ndarray = ops[-1]
+    for op in ops[-2::-1]:
         res = op.dot(res)
 
     return res
@@ -35,3 +35,9 @@ def equal(a: np.ndarray, b: np.ndarray) -> bool:
 
 def is_vector(a: np.ndarray) -> bool:
     return a[3] < RTOL
+
+
+def colorf_to_color(color: Union[np.ndarray, Tuple[float, float, float]]) -> Tuple[int, int, int]:
+    new_color = (min(int(color[0] * 255), 255),
+                 min(int(color[1] * 255), 255), min(int(color[2] * 255), 255))
+    return new_color

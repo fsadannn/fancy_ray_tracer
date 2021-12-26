@@ -120,6 +120,10 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     temp = Intersection(0, None)
 
     index = bisect_left(intersections, temp)
+    print(index, len(intersections))
+
+    if index >= len(intersections):
+        return None
 
     return intersections[index]
 

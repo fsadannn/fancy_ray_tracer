@@ -1,7 +1,5 @@
 import numpy as np
-from fancy_ray_tracer.matrices import scaling, translation, view_transform
-from fancy_ray_tracer.tuples import point, vector
-from fancy_ray_tracer.utils import equal
+from fancy_ray_tracer import equal, point, scaling, translation, vector, view_transform
 
 
 def test_view_transform():

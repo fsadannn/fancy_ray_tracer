@@ -111,3 +111,27 @@ def test_world_color_ray_hits_behind():
     r = Ray(point(0, 0, 0.75), vector(0, 0, -1))
     c = w.color_at(r)
     assert equal(c, inner.material.color)
+
+
+def test_shadowed_no_colineal():
+    w = make_default_world()
+    p = point(0, 10, 0)
+    assert w.is_shadowed(p) == False
+
+
+def test_shadowed_object_between():
+    w = make_default_world()
+    p = point(10, -10, 10)
+    assert w.is_shadowed(p) == True
+
+
+def test_shadowed_object_behind_light():
+    w = make_default_world()
+    p = point(-20, 20, -20)
+    assert w.is_shadowed(p) == False
+
+
+def test_shadowed_object_behind_point():
+    w = make_default_world()
+    p = point(-2, 2, -2)
+    assert w.is_shadowed(p) == False

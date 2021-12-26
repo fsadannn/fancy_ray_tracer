@@ -38,3 +38,12 @@ def test_eyem45_light45_surface():
     light = Light(point(0, 10, -10), make_color(1, 1, 1))
     result = lighting(MAT, light, POS, eyev, normalv)
     assert equal(result, make_color(1.6364, 1.6364, 1.6364))
+
+
+def test_surface_shadow():
+    eyev = vector(0, 0, -1)
+    normalv = vector(0, 0, -1)
+    light = Light(point(0, 0, -10), make_color(1, 1, 1))
+    in_shadow = True
+    result = lighting(MAT, light, POS, eyev, normalv, in_shadow)
+    assert equal(result, make_color(0.1, 0.1, 0.1))

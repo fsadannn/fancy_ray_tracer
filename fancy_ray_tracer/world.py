@@ -1,3 +1,4 @@
+from math import sqrt
 from typing import (
     Iterable,
     List,
@@ -10,7 +11,7 @@ from typing import (
 
 import numpy as np
 
-from fancy_ray_tracer.tuples import make_color
+from fancy_ray_tracer.tuples import make_color, point
 
 from .illumination import Light, lighting
 from .protocols import WorldObject
@@ -87,3 +88,28 @@ class World:
             return make_color(0, 0, 0)
 
         return self.shade_hit(Computations(it, ray))
+
+    def is_shadowed(self, p: np.ndarray) -> bool:
+        if len(self.light) == 1:
+            return self._is_shadowed(p, self.light[0].position)
+
+        if len(self.light) == 0:
+            return True
+
+        in_shadow: bool = self._is_shadowed(p, self.light[0].position)
+        light: Light
+        for light in self.light[1:]:
+            in_shadow |= self._is_shadowed(p, light.position)
+
+        return in_shadow
+
+    def _is_shadowed(self, p: np.ndarray, light_position: np.ndarray) -> bool:
+        direction: np.ndarray = light_position - p
+        distance: float = sqrt(direction.dot(direction))
+        direction *= (1 / distance)
+
+        r = Ray(p, direction)
+        intersects = self.intersec(r)
+        h = hit_sorted(intersects)
+
+        return h is not None and h.t < distance

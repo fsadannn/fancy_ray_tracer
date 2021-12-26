@@ -28,26 +28,27 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
 
 
 def lighting(material: Material, light: Light, point: np.ndarray,
-             eyev: np.ndarray, normalv: np.ndarray):
+             eyev: np.ndarray, normalv: np.ndarray, in_shadow: bool = False):
     # combine the surface color with the light's color/intensity
     effective_color = material.color * light.intensity
+
+    # compute the ambient contribution
+    ambient = effective_color * material.ambient
+
+    if in_shadow:
+        return ambient
 
     # find the direction to the light source
     # normalization inplace, equivalent to
     # lightv = normalize(light.position - point)
     lightv: np.ndarray = light.position - point
     lightv *= (1.0 / sqrt(lightv.dot(lightv)))
-    # compute the ambient contribution
-    ambient = effective_color * material.ambient
     # light_dot_normal represents the cosine of the angle between the
     # light vector and the normal vector. A negative number means the
     # light is on the other side of the surface.
     light_dot_normal: float = lightv.dot(normalv)
     if light_dot_normal < 0:
-        # diffuse = 0
-        # specular = 0
         return ambient
-    # else:
 
     # compute the diffuse contribution
     diffuse = (material.diffuse * light_dot_normal) * effective_color
@@ -57,15 +58,11 @@ def lighting(material: Material, light: Light, point: np.ndarray,
     # write reflect inplace for speed equivalen to
     # reflectv = reflect(-lightv, normalv)
     lightvn: np.ndarray = -lightv
-    #reflectv: np.ndarray = lightvn - (2.0 * lightvn.dot(normalv)) * normalv
-
     reflect_dot_eye: float = (
         lightvn - (2.0 * lightvn.dot(normalv)) * normalv).dot(eyev)
 
     if reflect_dot_eye <= 0:
-        # specular = 0
         return ambient + diffuse
-    # else:
 
     # compute the specular contribution
     specular = light.intensity * material.specular * \
