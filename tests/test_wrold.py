@@ -1,3 +1,5 @@
+from typing import List
+
 from fancy_ray_tracer import (
     Light,
     Ray,
@@ -11,7 +13,8 @@ from fancy_ray_tracer import (
 )
 from fancy_ray_tracer.constants import ATOL
 from fancy_ray_tracer.illumination import lighting
-from fancy_ray_tracer.ray import Computations, Intersection
+from fancy_ray_tracer.matrices import translation
+from fancy_ray_tracer.ray import Computations, Intersection, hit_sorted
 
 SPHERE_CACHE = {}
 DEFAULT_KEY = 'default'
@@ -72,8 +75,9 @@ def test_world_shading():
     r = Ray(point(0, 0, -5), vector(0, 0, 1))
     shape = w.objects[0]
     i = Intersection(4, shape)
-    comps = Computations(i, r)
-    c = w.shade_hit(comps)
+    cmp = Computations(i, r)
+    c = lighting(cmp.object.material, w.light[0],
+                 cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.38066, 0.47583, 0.2855))
 
 
@@ -83,22 +87,38 @@ def test_world_shading_inside():
     r = Ray(point(0, 0, 0), vector(0, 0, 1))
     shape = w.objects[1]
     i = Intersection(0.5, shape)
-    comps = Computations(i, r)
-    c = w.shade_hit(comps)
+    cmp = Computations(i, r)
+    c = lighting(cmp.object.material, w.light[0],
+                 cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.90498, 0.90498, 0.90498))
 
 
 def test_world_color_ray_miss():
     w = make_default_world()
     r = Ray(point(0, 0, -5), vector(0, 1, 0))
-    c = w.color_at(r)
+    intersections = w.intersec(r)
+    it = hit_sorted(intersections)
+    if it is None:
+        c = make_color(0, 0, 0)
+    else:
+        cmp = Computations(it, r)
+        c = lighting(cmp.object.material, w.light[0],
+                     cmp.point, cmp.eyev, cmp.normalv, False)
+
     assert equal(c, make_color(0, 0, 0))
 
 
 def test_world_color_ray_hits():
     w = make_default_world()
     r = Ray(point(0, 0, -5), vector(0, 0, 1))
-    c = w.color_at(r)
+    intersections = w.intersec(r)
+    it = hit_sorted(intersections)
+    if it is None:
+        c = make_color(0, 0, 0)
+    else:
+        cmp = Computations(it, r)
+        c = lighting(cmp.object.material, w.light[0],
+                     cmp.point, cmp.eyev, cmp.normalv, False)
     assert equal(c, make_color(0.38066, 0.47583, 0.2855))
 
 
@@ -135,3 +155,18 @@ def test_shadowed_object_behind_point():
     w = make_default_world()
     p = point(-2, 2, -2)
     assert w.is_shadowed(p) == False
+
+
+def test_shade_hit():
+    w = make_default_world()
+    w.light = [Light(point(0, 0, -10), make_color(1, 1, 1))]
+    s1 = Sphere()
+    w.add_object(s1)
+    s2 = Sphere()
+    s2.set_transform(translation(0, 0, 10))
+    w.add_object(s2)
+    r = Ray(point(0, 0, 5), vector(0, 0, 1))
+    i = Intersection(4, s2)
+    cmp = Computations(i, r)
+    c = w.shade_hit(cmp)
+    assert equal(c, make_color(0.1, 0.1, 0.1))

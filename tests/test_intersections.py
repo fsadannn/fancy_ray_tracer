@@ -1,5 +1,6 @@
 from fancy_ray_tracer import Intersection, Ray, make_sphere, point, scaling, vector
 from fancy_ray_tracer.constants import ATOL
+from fancy_ray_tracer.matrices import translation
 from fancy_ray_tracer.ray import Computations
 from fancy_ray_tracer.utils import equal
 
@@ -93,3 +94,13 @@ def test_hit_inside():
     assert equal(comps.point, point(0, 0, 1))
     assert equal(comps.eyev, vector(0, 0, -1))
     assert equal(comps.normalv, vector(0, 0, -1))
+
+
+def test_hit_offset_point():
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    s = make_sphere()
+    s.set_transform(translation(0, 0, 1))
+    i = Intersection(5, s)
+    comps = Computations(i, r)
+    assert comps.over_point[2] < -ATOL / 2
+    assert comps.point[2] > comps.over_point[2]

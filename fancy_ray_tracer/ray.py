@@ -83,7 +83,8 @@ class Ray:
 
 
 class Computations:
-    __slots__ = ("t", "object", "point", "eyev", "normalv", "inside")
+    __slots__ = ("t", "object", "point", "eyev",
+                 "normalv", "inside", "over_point")
 
     def __init__(self, intersection: Intersection, ray: Ray) -> None:
         self.t: float = intersection.t
@@ -96,6 +97,7 @@ class Computations:
             self.normalv = -self.normalv
         else:
             self.inside = False
+        self.over_point: np.ndarray = self.point + self.normalv * ATOL
 
 
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
@@ -120,7 +122,6 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     temp = Intersection(0, None)
 
     index = bisect_left(intersections, temp)
-    print(index, len(intersections))
 
     if index >= len(intersections):
         return None

@@ -57,7 +57,8 @@ camera = Camera(hsize, vsize, PI / 3)
 camera.set_transform(view_transform(
     point(0, 1.5, -5), point(0, 1, 0), vector(0, 1, 0)))
 
-canvas = CanvasImg('scene.jpg', (hsize, vsize))
+canvas = Canvas((hsize, vsize))
+# canvas = CanvasImg('scene.jpg', (hsize, vsize))
 
 camera.render(world, canvas)
 
