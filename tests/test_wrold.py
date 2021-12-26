@@ -14,6 +14,7 @@ from fancy_ray_tracer import (
 )
 from fancy_ray_tracer.constants import ATOL
 from fancy_ray_tracer.illumination import lighting
+from fancy_ray_tracer.materials import DefaultPattern
 from fancy_ray_tracer.matrices import translation
 from fancy_ray_tracer.primitives import Plane
 from fancy_ray_tracer.ray import Computations, Intersection, hit_sorted
@@ -30,9 +31,6 @@ def make_default_light():
 
 
 def Spheres():
-    if DEFAULT_KEY in SPHERE_CACHE:
-        return SPHERE_CACHE[DEFAULT_KEY]
-
     s1 = Sphere()
     s1.material.color = make_color(0.8, 1, 0.6)
     s1.material.diffuse = 0.7
@@ -40,9 +38,13 @@ def Spheres():
     s2 = Sphere()
     s2.set_transform(scaling(0.5, 0.5, 0.5))
 
-    SPHERE_CACHE[DEFAULT_KEY] = [s1, s2]
-
-    return [s1, s2]
+    if DEFAULT_KEY in SPHERE_CACHE:
+        id1, id2 = SPHERE_CACHE[DEFAULT_KEY]
+        s1.id = id1
+        s2.id = id2
+    else:
+        SPHERE_CACHE[DEFAULT_KEY] = (s1.id, s2.id)
+    return (s1, s2)
 
 
 def make_default_world():
@@ -197,3 +199,89 @@ def test_non_infinity_recursion():
     w.add_object(upper)
     r = Ray(point(0, 0, 0), vector(0, 0, 1))
     c = w.color_at(r)
+
+
+def test_refraction_opaque():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    s = w.objects[0]
+    xs = [Intersection(4, s), Intersection(6, s)]
+    cmp = Computations(xs[0], r, xs)
+    assert equal(w.refracted_color(cmp), make_color(0, 0, 0))
+
+
+def test_refraction_at_max_depth():
+    w = make_default_world()
+    r = Ray(point(0, 0, -5), vector(0, 0, 1))
+    s = w.objects[0]
+    s.material.transparency = 1.0
+    s.material.refractive_index = 1.5
+    xs = [Intersection(4, s), Intersection(6, s)]
+    cmp = Computations(xs[0], r, xs)
+    assert equal(w.refracted_color(cmp, 0), make_color(0, 0, 0))
+
+
+def test_total_internal_refraction():
+    w = make_default_world()
+    s = w.objects[0]
+    s.material.transparency = 1.0
+    s.material.refractive_index = 1.5
+    r = Ray(point(0, 0, sqrt(2) / 2), vector(0, 1, 0))
+    xs = [Intersection(-sqrt(2) / 2, s), Intersection(sqrt(2) / 2, s)]
+    cmp = Computations(xs[1], r, xs)
+    assert equal(w.refracted_color(cmp), make_color(0, 0, 0))
+
+
+def test_refraction():
+    w = make_default_world()
+    A = w.objects[0]
+    A.material.ambient = 1.0
+    A.material.pattern = DefaultPattern()
+    B = w.objects[1]
+    B.material.transparency = 1.0
+    B.material.refractive_index = 1.5
+    r = Ray(point(0, 0, 0.1), vector(0, 1, 0))
+    xs = [Intersection(-0.9899, A), Intersection(-0.4899, B),
+          Intersection(0.4899, B), Intersection(0.9899, A)]
+    cmp = Computations(xs[2], r, xs)
+    c = w.refracted_color(cmp)
+    assert equal(c, make_color(0, 0.99888, 0.04725), 1e-4, 1e-4)
+
+
+def test_refraction2():
+    w = make_default_world()
+    floor = Plane()
+    floor.set_transform(translation(0, -1, 0))
+    floor.material.transparency = 0.5
+    floor.material.refractive_index = 1.5
+    w.add_object(floor)
+    ball = Sphere()
+    ball.material.color = make_color(1, 0, 0)
+    ball.material.ambient = 0.5
+    ball.set_transform(translation(0, -3.5, -0.5))
+    w.add_object(ball)
+    r = Ray(point(0, 0, -3), vector(0, -sqrt(2) / 2, sqrt(2) / 2))
+    xs = [Intersection(sqrt(2), floor)]
+    cmp = Computations(xs[0], r, xs)
+    color = w.shade_hit(cmp)
+    assert equal(color, make_color(0.93642, 0.68642, 0.68642))
+
+
+def test_refraction_reflection():
+    w = make_default_world()
+    r = Ray(point(0, 0, -3), vector(0, -sqrt(2) / 2, sqrt(2) / 2))
+    floor = Plane()
+    floor.set_transform(translation(0, -1, 0))
+    floor.material.reflective = 0.5
+    floor.material.transparency = 0.5
+    floor.material.refractive_index = 1.5
+    w.add_object(floor)
+    ball = Sphere()
+    ball.material.color = make_color(1, 0, 0)
+    ball.material.ambient = 0.5
+    ball.set_transform(translation(0, -3.5, -0.5))
+    w.add_object(ball)
+    xs = [Intersection(sqrt(2), floor)]
+    cmp = Computations(xs[0], r, xs)
+    color = w.shade_hit(cmp)
+    assert equal(color, make_color(0.93391, 0.69643, 0.69243))

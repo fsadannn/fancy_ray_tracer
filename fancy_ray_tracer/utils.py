@@ -29,8 +29,8 @@ def rand_id(length: int = 20) -> str:
     return b64encode(urandom(length)).decode('ascii')
 
 
-def equal(a: np.ndarray, b: np.ndarray) -> bool:
-    return np.allclose(a, b, rtol=RTOL, atol=ATOL)
+def equal(a: np.ndarray, b: np.ndarray, atol=ATOL, rtol=RTOL) -> bool:
+    return np.allclose(a, b, rtol=atol, atol=rtol)
 
 
 def is_vector(a: np.ndarray) -> bool:

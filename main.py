@@ -29,9 +29,11 @@ middle = Sphere()
 middle.set_transform(translation(-0.5, 1, 0.5))
 middle.material = make_material()
 middle.material.color = make_color(0.1, 1, 0.5)
-middle.material.diffuse = 0.7
-middle.material.specular = 0.3
-middle.material.reflective = 0.8
+#middle.material.diffuse = 0.7
+#middle.material.specular = 0.3
+middle.material.reflective = 0
+middle.material.refractive_index = 1.5
+middle.material.transparency = 1.0
 
 right = Sphere()
 right.set_transform(

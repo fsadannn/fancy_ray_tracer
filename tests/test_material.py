@@ -74,3 +74,9 @@ def test_pattern():
 def test_reflective():
     m = make_material()
     assert m.reflective == 0
+
+
+def test_refactive():
+    m = make_material()
+    assert m.transparency == 0
+    assert m.refractive_index == 1

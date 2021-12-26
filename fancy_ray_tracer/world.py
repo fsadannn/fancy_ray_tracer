@@ -18,6 +18,7 @@ from .ray import Computations, Intersection, Ray, hit_sorted
 from .tuples import make_color
 
 _BLACK = make_color(0, 0, 0)
+_WHITE = make_color(1, 1, 1)
 
 
 class World:
@@ -66,18 +67,26 @@ class World:
         return intersections
 
     def shade_hit(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
+        material = cmp.object.material
         if len(self.light) == 1:
             in_shadow = self._is_shadowed(
                 cmp.over_point, self.light[0].position)
             surface = lighting(cmp.object, self.light[0],
                                cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
             reflected = self.reflected_color(cmp, remaining)
-            return surface + reflected
+            refracted = self.refracted_color(cmp, remaining)
+
+            if material.reflective > EPSILON and material.transparency > EPSILON:
+                reflectance = schlick(cmp)
+                return surface + reflected * reflectance + (1 - reflectance) * refracted
+
+            return surface + reflected + refracted
 
         if len(self.light) == 0:
             return _BLACK
 
         reflected = self.reflected_color(cmp, remaining)
+        refracted = self.refracted_color(cmp, remaining)
         in_shadow = self._is_shadowed(cmp.over_point, self.light[0].position)
         color = lighting(cmp.object, self.light[0],
                          cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
@@ -87,7 +96,11 @@ class World:
             color += lighting(cmp.object, light,
                               cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
 
-        return color + reflected
+        if material.reflective > EPSILON and material.transparency > EPSILON:
+            reflectance = schlick(cmp)
+            return color + reflected * reflectance + (1 - reflectance) * refracted
+
+        return color + reflected + refracted
 
     def color_at(self, ray: Ray, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
         intersections: Sequence[Intersection] = self.intersec(ray)
@@ -96,7 +109,7 @@ class World:
         if it is None:
             return _BLACK
 
-        return self.shade_hit(Computations(it, ray), remaining)
+        return self.shade_hit(Computations(it, ray, intersections), remaining)
 
     def is_shadowed(self, p: np.ndarray) -> bool:
         if len(self.light) == 1:
@@ -130,3 +143,36 @@ class World:
         reflect_ray = Ray(cmp.over_point, cmp.reflectv)
         color = self.color_at(reflect_ray, remaining - 1)
         return color * cmp.object.material.reflective
+
+    def refracted_color(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
+        if cmp.object.material.transparency < EPSILON or remaining <= 0:
+            return _BLACK
+
+        n_ratio = cmp.n1 / cmp.n2
+        cos_i: float = cmp.eyev.dot(cmp.normalv)
+        sin2_t = n_ratio**2 * (1.0 - cos_i**2)
+
+        if sin2_t > 1:
+            return _BLACK
+
+        cos_t = sqrt(1.0 - sin2_t)
+        direction = cmp.normalv * \
+            (n_ratio * cos_i - cos_t) - cmp.eyev * n_ratio
+        refract_ray = Ray(cmp.under_point, direction)
+
+        return self.color_at(refract_ray, remaining - 1) * cmp.object.material.transparency
+
+
+def schlick(cmp: Computations) -> float:  # reflectance
+    cos: float = cmp.eyev.dot(cmp.normalv)
+
+    if cmp.n1 > cmp.n2:
+        sin2_t = (cmp.n1 / cmp.n2)**2 * (1 - cos**2)
+
+        if sin2_t > 1:
+            return 1.0
+
+        cos = sqrt(1.0 - sin2_t)
+
+    r0 = ((cmp.n1 - cmp.n2) / (cmp.n1 + cmp.n2))**2
+    return r0 + (1 - r0) * (1 - cos)**5

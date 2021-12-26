@@ -36,6 +36,8 @@ class MaterialP(ColorAtPoint, Protocol):
     shininess: float
     pattern: Optional[Pattern]
     reflective: float
+    transparency: float
+    refractive_index: float
 
     def __eq__(self, other: MaterialP) -> bool:
         raise NotImplementedError

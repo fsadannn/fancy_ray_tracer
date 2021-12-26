@@ -5,6 +5,8 @@ from typing import Optional
 
 import numpy as np
 
+from fancy_ray_tracer.tuples import make_color
+
 from .constants import EPSILON
 from .matrices import identity
 from .protocols import MaterialP, Pattern
@@ -18,6 +20,12 @@ class DefaultPattern(Pattern):
         self.name = 'default'
         self.transform: np.ndarray = identity()
         self.inv_transform: np.ndarray = self.transform
+
+    def color_at(self, point: np.ndarray) -> np.ndarray:
+        return point[:3]
+
+    def __eq__(self, other: DefaultPattern) -> bool:
+        return self.name == other.name
 
 
 class StripePattern(DefaultPattern):
@@ -96,10 +104,12 @@ class ChessPattern(DefaultPattern):
 
 class Material(MaterialP):  # pylint: disable=too-few-public-methods,too-many-arguments
     __slots__ = ("color", "ambient", "diffuse",
-                 "specular", "shininess", "reflective", "pattern")
+                 "specular", "shininess", "reflective", "pattern",
+                 "transparency", "refractive_index")
 
     def __init__(self, color: np.ndarray, ambient: float,
-                 diffuse: float, specular: float, shininess: float, reflective: float = 0, pattern: Optional[Pattern] = None):
+                 diffuse: float, specular: float, shininess: float, reflective: float = 0.0,
+                 transparency: float = 0.0, refractive_index: float = 1.0, pattern: Optional[Pattern] = None):
         self.color: np.ndarray = color
         self.ambient: float = ambient
         self.diffuse: float = diffuse
@@ -107,6 +117,8 @@ class Material(MaterialP):  # pylint: disable=too-few-public-methods,too-many-ar
         self.shininess: float = shininess
         self.reflective = reflective
         self.pattern: Optional[Pattern] = pattern
+        self.transparency: float = transparency
+        self.refractive_index: float = refractive_index
 
     def color_at(self, point: np.ndarray) -> np.ndarray:
         if self.pattern is None:

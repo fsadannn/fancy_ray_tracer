@@ -80,3 +80,10 @@ class Plane(Shape):
 
         t = -origin[1] / direction[1]
         return [Intersection(t, self)]
+
+
+def glass_sphere() -> Sphere:
+    s = Sphere()
+    s.material.transparency = 1.0
+    s.material.refractive_index = 1.5
+    return s

@@ -3,7 +3,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from functools import total_ordering
 from math import sqrt
-from typing import Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -65,9 +65,10 @@ class Ray:
 
 class Computations:
     __slots__ = ("t", "object", "point", "eyev",
-                 "normalv", "inside", "over_point", "reflectv")
+                 "normalv", "inside", "over_point", "reflectv",
+                 "n1", "n2", "under_point")
 
-    def __init__(self, intersection: Intersection, ray: Ray) -> None:
+    def __init__(self, intersection: Intersection, ray: Ray, xs: Sequence[Intersection] = []) -> None:
         self.t: float = intersection.t
         self.object: WorldObject = intersection.object
         self.point: np.ndarray = ray.origin + ray.direction * self.t
@@ -79,8 +80,40 @@ class Computations:
         else:
             self.inside = False
         self.over_point: np.ndarray = self.point + self.normalv * EPSILON
+        self.under_point: np.ndarray = self.point - self.normalv * EPSILON
         self.reflectv = ray.direction - \
             (2 * ray.direction.dot(self.normalv)) * self.normalv
+
+        n1 = 1.0
+        n2 = 1.0
+        containers: List[WorldObject] = []
+        i: Intersection
+        isHit: bool = False
+        obj: WorldObject = None
+        for i in xs:
+            isHit = i == intersection
+
+            if isHit:
+                if len(containers) == 0:
+                    n1 = 1.0
+                else:
+                    n1 = containers[-1].material.refractive_index
+
+            obj = i.object
+            if obj in containers:
+                containers.remove(obj)
+            else:
+                containers.append(obj)
+
+            if isHit:
+                if len(containers) == 0:
+                    n2 = 1.0
+                else:
+                    n2 = containers[-1].material.refractive_index
+                break
+
+        self.n1 = n1
+        self.n2 = n2
 
 
 def hit(intersections: Sequence[Intersection]) -> Optional[Intersection]:
