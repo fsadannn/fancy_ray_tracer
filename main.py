@@ -1,20 +1,19 @@
 from fancy_ray_tracer import *
 from fancy_ray_tracer.constants import PI
 
-floor = Sphere()
-floor.set_transform(scaling(10, 0.01, 10))
+floor = Plane()
 floor.material = make_material()
 floor.material.color = make_color(1, 0.9, 0.9)
 floor.material.specular = 0.0
 
-left_wall = Sphere()
+left_wall = Plane()
 left_wall.set_transform(chain_ops(
-    [translation(0, 0, 5), rotY(-PI / 4), rotX(PI / 2), scaling(10, 0.01, 10), ]))
+    [translation(0, 0, 5), rotY(-PI / 4), rotX(PI / 2)]))
 left_wall.material = floor.material
 
-right_wall = Sphere()
+right_wall = Plane()
 right_wall.set_transform(chain_ops(
-    [translation(0, 0, 5), rotY(PI / 4), rotX(PI / 2), scaling(10, 0.01, 10), ]))
+    [translation(0, 0, 5), rotY(PI / 4), rotX(PI / 2)]))
 right_wall.material = floor.material
 
 
