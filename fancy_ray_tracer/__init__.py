@@ -1,5 +1,5 @@
 from .camera import Camera
-from .canvas import Canvas, CanvasImg
+from .canvas import Canvas
 from .illumination import Light, lighting, reflect
 from .materials import (
     ChessPattern,

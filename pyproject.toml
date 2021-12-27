@@ -12,8 +12,10 @@ default = true
 
 [tool.poetry.dependencies]
 python = "^3.8,<3.11"
-pygame = "^2.1.0"
 numpy = "^1.21.5"
+pillow = "^8.4.0"
+joblib = "^1.1.0"
+lz4 = "^3.1.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

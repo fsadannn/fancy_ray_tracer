@@ -9,7 +9,7 @@ from fancy_ray_tracer import (
     ray,
     scaling,
 )
-from fancy_ray_tracer.canvas import CanvasImg
+from fancy_ray_tracer.canvas import Canvas
 
 canvas_pixels = 400
 ray_origin = point(0, 0, -5)
@@ -18,7 +18,7 @@ wall_size = 7.0
 pixel_size = wall_size / canvas_pixels
 half = wall_size / 2
 
-cv = CanvasImg('materials.jpg', (canvas_pixels, canvas_pixels))
+cv = Canvas((canvas_pixels, canvas_pixels))
 
 color = make_color(1, 0, 0)
 shape = Sphere()
@@ -47,4 +47,4 @@ for y in range(canvas_pixels - 1):
                              light, hit_point, eye, normal)
             cv.set_pixelf(x, y, color.tolist())
 
-cv.run()
+cv.save_img('materials.jpg')

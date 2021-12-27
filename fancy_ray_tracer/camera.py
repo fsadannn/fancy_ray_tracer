@@ -1,13 +1,14 @@
+import multiprocessing
 from math import sqrt, tan
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
+from joblib import Parallel, delayed
 
-from .canvas import Canvas, CanvasImg
+from fancy_ray_tracer.protocols import CanvasP
+
 from .matrices import inverse
 from .ray import Ray
-from .tuples import point
-from .utils import colorf_to_color
 from .world import World
 
 
@@ -55,11 +56,18 @@ class Camera:
         direction *= 1 / nm
         return Ray(origin, direction)
 
-    def render(self, world: World, canvas: Union[Canvas, CanvasImg]):
-        with canvas.get_pixel_array_cm() as cv:
-            for y in range(self.vsize):
-                for x in range(self.hsize):
-                    r = self.ray_for_pixel(x, y)
-                    c = world.color_at(r)
-                    nc = colorf_to_color(c)
-                    cv[x, y] = nc
+    def render(self, world: World, canvas: CanvasP):
+        ncpu = multiprocessing.cpu_count()
+        pp = Parallel(n_jobs=ncpu, verbose=10)
+        c = pp(delayed(self._render_y)(world, y) for y in range(self.vsize))
+        for y in range(self.vsize):
+            for x in range(self.hsize):
+                canvas.set_pixelf(x, y, c[y][x])
+
+    def _render_y(self, world: World, y: int):
+        cc = []
+        for x in range(self.hsize):
+            r = self.ray_for_pixel(x, y)
+            c = world.color_at(r)
+            cc.append(c)
+        return cc

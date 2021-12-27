@@ -31,9 +31,9 @@ middle.material = make_material()
 middle.material.color = make_color(0.1, 1, 0.5)
 #middle.material.diffuse = 0.7
 #middle.material.specular = 0.3
-middle.material.reflective = 0
+middle.material.reflective = 0.5
 middle.material.refractive_index = 1.5
-middle.material.transparency = 1.0
+middle.material.transparency = 0.9
 
 right = Sphere()
 right.set_transform(
@@ -67,8 +67,6 @@ camera.set_transform(view_transform(
     point(0, 1.5, -5), point(0, 1, 0), vector(0, 1, 0)))
 
 canvas = Canvas((hsize, vsize))
-#canvas = CanvasImg('scene.jpg', (hsize, vsize))
-
 camera.render(world, canvas)
 
-canvas.run()
+canvas.canvas.show()
