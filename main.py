@@ -60,13 +60,13 @@ world.add_object(middle)
 world.add_object(right)
 world.add_object(left)
 
-hsize = 300
-vsize = 200
+hsize = 400
+vsize = 300
 camera = Camera(hsize, vsize, PI / 3)
 camera.set_transform(view_transform(
     point(0, 1.5, -5), point(0, 1, 0), vector(0, 1, 0)))
 
 canvas = Canvas((hsize, vsize))
 camera.render(world, canvas)
-
+# camera.render_sequential(world, canvas)
 canvas.canvas.show()

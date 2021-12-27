@@ -71,3 +71,10 @@ class Camera:
             c = world.color_at(r)
             cc.append(c)
         return cc
+
+    def render_sequential(self, world: World, canvas: CanvasP):
+        for y in range(self.vsize):
+            for x in range(self.hsize):
+                r = self.ray_for_pixel(x, y)
+                c = world.color_at(r)
+                canvas.set_pixelf(x, y, c)
