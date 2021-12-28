@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import sqrt
+from math import pow, sqrt
 from typing import Optional, Sequence
 
 import numpy as np

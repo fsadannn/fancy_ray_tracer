@@ -22,15 +22,9 @@ class Intersection:
         self.object: WorldObject = object
 
     def __eq__(self, other: Intersection) -> bool:
-        if not isinstance(other, Intersection):
-            raise NotImplementedError
-
         return abs(self.t - other.t) < EPSILON and self.object == other.object
 
     def __lt__(self, other: Intersection):
-        if not isinstance(other, Intersection):
-            raise NotImplementedError
-
         return self.t < other.t
 
 
@@ -45,9 +39,6 @@ class Ray:
         return self.origin + self.direction * t
 
     def __eq__(self, other: Ray) -> bool:
-        if not isinstance(other, Ray):
-            raise NotImplementedError
-
         return equal(self.direction, other.direction) and equal(self.origin, other.origin)
 
     def transform(self, matrix: np.ndarray) -> Ray:

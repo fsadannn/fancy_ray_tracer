@@ -155,4 +155,4 @@ dmypy.json
 *.lprof
 *.prof
 garbage.py
-profile.bat
+*.bat

@@ -42,3 +42,11 @@ coverage:
 .PHONY: cov
 cov:
 	poetry run codecov
+
+.PHONY: build-ext-win
+build-ext-win:
+	poetry run python build.py build_ext -v --inplace -DMS_WIN64
+
+.PHONY: build-ext
+build-ext:
+	poetry run python build.py build_ext -v --inplace -DMS_WIN64

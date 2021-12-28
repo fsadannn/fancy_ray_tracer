@@ -16,9 +16,6 @@ class Light:
         self.position: np.ndarray = position
 
     def __eq__(self, other: Light) -> bool:
-        if not isinstance(other, Light):
-            raise NotImplementedError
-
         return equal(self.position, other.position) and equal(self.intensity, other.intensity)
 
 
@@ -30,8 +27,8 @@ def lighting(object: WorldObject, light: Light, point: np.ndarray,
              eyev: np.ndarray, normalv: np.ndarray, in_shadow: bool = False):
     # combine the surface color with the light's color/intensity
     material = object.material
-    color = object.color_at(point)
-    effective_color = color * light.intensity
+    # color = object.color_at(point)
+    effective_color = object.color_at(point) * light.intensity
 
     # compute the ambient contribution
     ambient = effective_color * material.ambient
@@ -56,7 +53,7 @@ def lighting(object: WorldObject, light: Light, point: np.ndarray,
     # reflect_dot_eye represents the cosine of the angle between the
     # reflection vector and the eye vector. A negative number means the
     # light reflects away from the eye.
-    # write reflect inplace for speed equivalen to
+    # write reflect inplace for speed, equivalen to
     # reflectv = reflect(-lightv, normalv)
     lightvn: np.ndarray = -lightv
     reflect_dot_eye: float = (

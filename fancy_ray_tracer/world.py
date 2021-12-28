@@ -11,6 +11,7 @@ from typing import (
 
 import numpy as np
 
+from .compiled import _schlick
 from .constants import EPSILON, RAY_REFLECTION_LIMIT
 from .illumination import Light, lighting
 from .protocols import WorldObject
@@ -77,7 +78,9 @@ class World:
             refracted = self.refracted_color(cmp, remaining)
 
             if material.reflective > EPSILON and material.transparency > EPSILON:
-                reflectance = schlick(cmp)
+                # reflectance = schlick(cmp)
+                reflectance = _schlick.schlick(
+                    cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
                 return surface + reflected * reflectance + (1 - reflectance) * refracted
 
             return surface + reflected + refracted
@@ -97,7 +100,9 @@ class World:
                               cmp.over_point, cmp.eyev, cmp.normalv, in_shadow)
 
         if material.reflective > EPSILON and material.transparency > EPSILON:
-            reflectance = schlick(cmp)
+            # reflectance = schlick(cmp)
+            reflectance = _schlick.schlick(
+                cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
             return color + reflected * reflectance + (1 - reflectance) * refracted
 
         return color + reflected + refracted
@@ -164,15 +169,16 @@ class World:
 
 
 def schlick(cmp: Computations) -> float:  # reflectance
-    cos: float = cmp.eyev.dot(cmp.normalv)
+    # cos: float = cmp.eyev.dot(cmp.normalv)
 
-    if cmp.n1 > cmp.n2:
-        sin2_t = (cmp.n1 / cmp.n2)**2 * (1 - cos**2)
+    # if cmp.n1 > cmp.n2:
+    #     sin2_t = (cmp.n1 / cmp.n2)**2 * (1 - cos**2)
 
-        if sin2_t > 1:
-            return 1.0
+    #     if sin2_t > 1:
+    #         return 1.0
 
-        cos = sqrt(1.0 - sin2_t)
+    #     cos = sqrt(1.0 - sin2_t)
 
-    r0 = ((cmp.n1 - cmp.n2) / (cmp.n1 + cmp.n2))**2
-    return r0 + (1 - r0) * (1 - cos)**5
+    # r0 = ((cmp.n1 - cmp.n2) / (cmp.n1 + cmp.n2))**2
+    # return r0 + (1 - r0) * (1 - cos)**5
+    return _schlick.schlick(cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)

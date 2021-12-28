@@ -128,9 +128,6 @@ class Material(MaterialP):  # pylint: disable=too-few-public-methods,too-many-ar
         return self.pattern.color_at(point)
 
     def __eq__(self, other: Material) -> bool:
-        if not isinstance(other, Material):
-            raise NotImplementedError
-
         return equal(self.color, other.color) and abs(self.ambient - other.ambient) < EPSILON \
             and abs(self.diffuse - other.diffuse) < EPSILON \
             and abs(self.specular - other.specular) < EPSILON \
