@@ -79,7 +79,7 @@ class World:
 
             if material.reflective > EPSILON and material.transparency > EPSILON:
                 # reflectance = schlick(cmp)
-                reflectance = _schlick.schlick(
+                reflectance: float = _schlick.schlick(
                     cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
                 return surface + reflected * reflectance + (1 - reflectance) * refracted
 

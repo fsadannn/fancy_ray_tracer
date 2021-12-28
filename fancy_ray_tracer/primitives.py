@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import pow, sqrt
+from math import sqrt
 from typing import Optional, Sequence
 
 import numpy as np
@@ -50,7 +50,7 @@ class Sphere(Shape):
         a: float = direction.dot(direction)
         b: float = 2.0 * direction.dot(origin)
         c: float = origin.dot(origin) - 1
-        dc = pow(b, 2.0) - 4.0 * a * c
+        dc = b * b - 4.0 * a * c
 
         if dc < 0:
             return ()

@@ -5,8 +5,6 @@ from typing import Optional
 
 import numpy as np
 
-from fancy_ray_tracer.tuples import make_color
-
 from .constants import EPSILON
 from .matrices import identity
 from .protocols import MaterialP, Pattern
