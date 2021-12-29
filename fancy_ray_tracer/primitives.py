@@ -7,7 +7,7 @@ from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
-from .constants import EPSILON
+from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON
 from .materials import make_material
 from .matrices import identity
 from .protocols import WorldObject
@@ -21,23 +21,64 @@ except ImportError:
     _intersection = None
 
 
-def check_axis_fallback(origin: float, direction: float, epsilon: float, axis_min: float = -1.0, axis_max: float = 1.0) -> Tuple[float, float]:
-    if fabs(direction) >= epsilon:
-        tmin = (axis_min - origin) / direction
-        tmax = (axis_max - origin) / direction
+def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray, origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
+    temp = direction[0]
+    if fabs(temp) >= epsilon:
+        temp = 1 / temp
     else:
-        tmin = (axis_min - origin) * INFINITY
-        tmax = (axis_max - origin) * INFINITY
+        temp = INFINITY
 
-    if tmin > tmax:
-        temp = tmin
-        tmin = tmax
-        tmax = temp
+    if temp >= 0:
+        tmin = (bound_min[0] - origin[0]) * temp
+        tmax = (bound_max[0] - origin[0]) * temp
+    else:
+        tmin = (bound_max[0] - origin[0]) * temp
+        tmax = (bound_min[0] - origin[0]) * temp
+
+    temp = direction[1]
+    if fabs(temp) >= epsilon:
+        temp = 1 / temp
+    else:
+        temp = INFINITY
+
+    if temp >= 0:
+        tminy = (bound_min[1] - origin[1]) * temp
+        tmaxy = (bound_max[1] - origin[1]) * temp
+    else:
+        tminy = (bound_max[1] - origin[1]) * temp
+        tmaxy = (bound_min[1] - origin[1]) * temp
+
+    if tmin > tmaxy or tminy > tmax:
+        return None
+    if tminy > tmin:
+        tmin = tminy
+    if tmaxy < tmax:
+        tmax = tmaxy
+
+    temp = direction[2]
+    if fabs(temp) >= epsilon:
+        temp = 1 / temp
+    else:
+        temp = INFINITY
+
+    if temp >= 0:
+        tminz = (bound_min[2] - origin[2]) * temp
+        tmaxz = (bound_max[2] - origin[2]) * temp
+    else:
+        tminz = (bound_max[2] - origin[2]) * temp
+        tmaxz = (bound_min[2] - origin[2]) * temp
+
+    if tmin > tmaxz or tminz > tmax:
+        return None
+    if tminz > tmin:
+        tmin = tminz
+    if tmaxz < tmax:
+        tmax = tmaxz
 
     return (tmin, tmax)
 
 
-check_axis = _intersection.check_axis if _intersection is not None else check_axis_fallback
+aabb_box_intersect = _intersection.aabb_box_intersect if _intersection is not None else aabb_box_intersect_fallback
 
 
 class Shape(WorldObject):
@@ -129,11 +170,9 @@ class Cube(Shape):
         return vector(0, 0, p[2])
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
-        xtmin, xtmax = check_axis(origin[0], direction[0], EPSILON)
-        ytmin, ytmax = check_axis(origin[1], direction[1], EPSILON)
-        ztmin, ztmax = check_axis(origin[2], direction[2], EPSILON)
-        tmin = max(xtmin, ytmin, ztmin)
-        tmax = min(xtmax, ytmax, ztmax)
-        if tmin > tmax:
+
+        it = aabb_box_intersect(
+            BOX_UNITARY_MIN_BOUND, BOX_UNITARY_MAX_BOUND, origin, direction, EPSILON)
+        if it is None:
             return ()
-        return [Intersection(tmin, self), Intersection(tmax, self)]
+        return [Intersection(it[0], self), Intersection(it[1], self)]

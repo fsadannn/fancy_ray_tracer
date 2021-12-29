@@ -25,8 +25,8 @@ right_wall.set_transform(chain_ops(
 right_wall.material = left_wall.material
 
 
-middle = Sphere()
-middle.set_transform(translation(-0.5, 1, 0.5))
+middle = Cube()
+middle.set_transform(chain_ops([translation(0, 1, 1), rotY(PI / 4)]))
 middle.material = make_material()
 middle.material.color = make_color(0.1, 1, 0.5)
 #middle.material.diffuse = 0.7
