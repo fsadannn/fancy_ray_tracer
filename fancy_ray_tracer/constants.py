@@ -1,3 +1,4 @@
+from math import inf as INFINITY
 from math import pi as _pi  # pylint: disable=unused-import
 
 import numpy as np

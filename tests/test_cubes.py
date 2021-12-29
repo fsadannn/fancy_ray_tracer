@@ -26,7 +26,7 @@ def test_intersect():
     t1s = [4, 4, 4, 4, 4, 4, -1]
     t2s = [6, 6, 6, 6, 6, 6, 1]
     for origin, direction, t1, t2 in zip(origins, directions, t1s, t2s):
-        its = c.intersect(origin, direction)
+        its = c.intersect(origin, normalize(direction))
         assert len(its) == 2
         assert abs(its[0].t - t1) < EPSILON
         assert abs(its[1].t - t2) < EPSILON
@@ -52,7 +52,7 @@ def test_miss():
         vector(-1, 0, 0),
     ]
     for origin, direction in zip(origins, directions):
-        its = c.intersect(origin, direction)
+        its = c.intersect(origin, normalize(direction))
         assert len(its) == 0
 
 

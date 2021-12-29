@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from math import fabs
-from math import inf as INFINITY
-from math import sqrt
-from typing import Optional, Sequence, Tuple
+from math import fabs, sqrt
+from typing import Optional, Sequence, Sized, Tuple
 
 import numpy as np
 
-from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON
+from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON, INFINITY
 from .materials import make_material
 from .matrices import identity
 from .protocols import WorldObject
@@ -19,6 +17,39 @@ try:
     from .compiled import _intersection
 except ImportError:
     _intersection = None
+
+
+class CuadricSurfaceIntersections(Sized):
+    __slots__ = ("t0", "t1", "count")
+
+    def __init__(self):
+        self.t0: Intersection = None
+        self.t1: Intersection = None
+        self.count = 0
+
+    def __len__(self) -> int:
+        return self.count
+
+    def append(self, it: Intersection):
+        if self.t0 is None:
+            self.t0 = it
+
+        if self.t0.t > it.t:
+            self.t1 = self.t0
+            self.t0 = it
+            return
+
+        self.t1 = it
+        self.count += 1
+
+    def to_list(self):
+        c = self.count
+        if c == 0:
+            return ()
+        elif c == 1:
+            return [self.t0]
+
+        return (self.t0, self.t1)
 
 
 def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray, origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
@@ -176,3 +207,96 @@ class Cube(Shape):
         if it is None:
             return ()
         return [Intersection(it[0], self), Intersection(it[1], self)]
+
+
+class Cylinder(Shape):
+    __slots__ = ("minimum", "maximum", "closed")
+
+    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY, closed: bool = False, shapeId: Optional[str] = None):
+        super().__init__(shapeId=shapeId)
+        self.minimum = minimum
+        self.maximum = maximum
+        self.closed = closed
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        return vector(p[0], 0, p[2])
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        a = direction[0] * direction[0] + direction[2] * direction[2]
+
+        if a < EPSILON:
+            if not self.closed:
+                return ()
+            # here we have a perpendicular ray to the caps
+            # test if the ray hit one of the caps and if so the the second
+            # cap is hit too
+            xs = []
+            o1 = origin[1]
+            d1 = direction[1]
+            d1i = 1 / d1
+            t = (self.minimum - o1) * d1i
+            x = origin[0] + t * direction[0]
+            z = origin[2] + t * direction[2]
+            if x * x + z * z <= 1.0:
+                xs.append(Intersection(t, self))
+            else:
+                return ()
+
+            t = (self.maximum - o1) * d1i
+            x = origin[0] + t * direction[0]
+            z = origin[2] + t * direction[2]
+            xs.append(Intersection(t, self))
+
+            return xs
+
+        b = 2 * (origin[0] * direction[0] + origin[2] * direction[2])
+        c = origin[0] * origin[0] + origin[2] * origin[2] - 1
+
+        disc = b * b - 4 * a * c
+
+        if disc < 0:
+            return ()
+
+        sqdc = sqrt(disc)
+        a21 = 1 / (2 * a)
+        t0 = (-b - sqdc) * a21
+        t1 = (-b + sqdc) * a21
+
+        if t0 > t1:
+            t0, t1 = t1, t0
+
+        xs = CuadricSurfaceIntersections()
+
+        o1 = origin[1]
+        d1 = direction[1]
+        y = o1 + t0 * d1
+        if self.minimum < y < self.maximum:
+            xs.append(Intersection(t0, self))
+
+        y = o1 + t1 * d1
+        if self.minimum < y < self.maximum:
+            xs.append(Intersection(t1, self))
+
+        # since cylinder is cuadric surfece can only by intrecepted at maximun of two
+        # point at same time
+
+        if not self.closed or len(xs) == 2 or abs(d1) < EPSILON:
+            return xs.to_list()
+
+        d1i = 1 / d1
+        t = (self.minimum - o1) * d1i
+        x = origin[0] + t * direction[0]
+        z = origin[2] + t * direction[2]
+        if x * x + z * z <= 1:
+            xs.append(Intersection(t, self))
+
+        if len(xs) == 2:
+            return xs.to_list()
+
+        t = (self.maximum - o1) * d1i
+        x = origin[0] + t * direction[0]
+        z = origin[2] + t * direction[2]
+        if x * x + z * z <= 1:
+            xs.append(Intersection(t, self))
+
+        return xs.to_list()

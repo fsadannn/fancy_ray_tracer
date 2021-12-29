@@ -26,22 +26,27 @@ right_wall.material = left_wall.material
 
 
 middle = Cube()
-middle.set_transform(chain_ops([translation(0, 1, 1), rotY(PI / 4)]))
+middle.set_transform(chain_ops([translation(0, 1, 1), rotX(PI / 4)]))
 middle.material = make_material()
 middle.material.color = make_color(0.1, 1, 0.5)
 #middle.material.diffuse = 0.7
 #middle.material.specular = 0.3
-middle.material.reflective = 0.5
+#middle.material.reflective = 0.5
 middle.material.refractive_index = 1.5
 middle.material.transparency = 0.9
 
-right = Sphere()
+right = Cylinder(-0.2, 1.2, closed=True)
 right.set_transform(
     chain_ops([translation(1.5, 0.5, -0.5), scaling(0.5, 0.5, 0.5)]))
 right.material = make_material()
+right.material.pattern = StripePattern(
+    make_color(1, 0, 0), make_color(0, 0, 1))
 right.material.color = make_color(0.5, 1, 0.1)
 right.material.diffuse = 0.7
 right.material.specular = 0.3
+right.material.reflective = 0.5
+#right.material.refractive_index = 1.5
+#right.material.transparency = 0.9
 
 
 left = Sphere()
