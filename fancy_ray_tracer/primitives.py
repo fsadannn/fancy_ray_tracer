@@ -18,6 +18,13 @@ try:
 except ImportError:
     _intersection = None
 
+AXIS_X_VEC = vector(1, 0, 0)
+AXIS_Y_VEC = vector(0, 1, 0)
+AXIS_Z_VEC = vector(0, 0, 1)
+NAXIS_X_VEC = vector(-1, 0, 0)
+NAXIS_Y_VEC = vector(0, -1, 0)
+NAXIS_Z_VEC = vector(0, 0, -1)
+
 
 class CuadricSurfaceIntersections(Sized):
     __slots__ = ("t0", "t1", "count")
@@ -219,7 +226,16 @@ class Cylinder(Shape):
         self.closed = closed
 
     def normal_at(self, p: np.ndarray) -> np.ndarray:
-        return vector(p[0], 0, p[2])
+        d = p[0] * p[0] + p[2] * p[2]
+
+        if d < 1:
+            if p[1] > self.maximum - EPSILON:
+                return AXIS_Y_VEC
+            if p[1] < self.minimum + EPSILON:
+                return NAXIS_Y_VEC
+        rv = p.copy()
+        rv[1] = 0
+        return rv
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
         a = direction[0] * direction[0] + direction[2] * direction[2]
@@ -300,3 +316,20 @@ class Cylinder(Shape):
             xs.append(Intersection(t, self))
 
         return xs.to_list()
+
+
+class Cone(Shape):
+    __slots__ = ("minimum", "maximum", "closed")
+
+    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY, closed: bool = False, shapeId: Optional[str] = None):
+        super().__init__(shapeId=shapeId)
+        self.minimum = minimum
+        self.maximum = maximum
+        self.closed = closed
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        return vector(p[0], 0, p[2])
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        a = direction[0] * direction[0] + direction[2] * direction[2]
+        return []

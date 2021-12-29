@@ -26,25 +26,24 @@ right_wall.material = left_wall.material
 
 
 middle = Cube()
-middle.set_transform(chain_ops([translation(0, 1, 1), rotX(PI / 4)]))
+middle.set_transform(
+    chain_ops([translation(0, 1.8, -0.5), rotX(PI / 4), rotZ(PI / 4)]))
 middle.material = make_material()
-middle.material.color = make_color(0.1, 1, 0.5)
-#middle.material.diffuse = 0.7
-#middle.material.specular = 0.3
-#middle.material.reflective = 0.5
-middle.material.refractive_index = 1.5
-middle.material.transparency = 0.9
+middle.material.color = make_color(0.8, 0, 0)
+middle.material.diffuse = 0.7
+middle.material.specular = 0.3
+middle.material.reflective = 0.8
+# middle.material.refractive_index = 1.5
+# middle.material.transparency = 1.0
 
-right = Cylinder(-0.2, 1.2, closed=True)
+right = Cylinder(0, 2, closed=True)
 right.set_transform(
-    chain_ops([translation(1.5, 0.5, -0.5), scaling(0.5, 0.5, 0.5)]))
+    chain_ops([translation(1.5, 1, -1.8), scaling(0.6, 0.5, 0.6), rotX(-PI / 8)]))
 right.material = make_material()
-right.material.pattern = StripePattern(
-    make_color(1, 0, 0), make_color(0, 0, 1))
 right.material.color = make_color(0.5, 1, 0.1)
 right.material.diffuse = 0.7
 right.material.specular = 0.3
-right.material.reflective = 0.5
+right.material.reflective = 0.2
 #right.material.refractive_index = 1.5
 #right.material.transparency = 0.9
 
@@ -69,7 +68,7 @@ hsize = 350
 vsize = 225
 camera = Camera(hsize, vsize, PI / 3)
 camera.set_transform(view_transform(
-    point(0, 1.5, -5), point(0, 1, 0), vector(0, 1, 0)))
+    point(0, 2, -7), point(0, 1.5, 0), vector(0, 1, 0)))
 
 canvas = Canvas((hsize, vsize))
 camera.render(world, canvas)
