@@ -11,7 +11,10 @@ from typing import (
 
 import numpy as np
 
-from .compiled import _schlick
+try:
+    from .compiled import _schlick
+except ImportError:
+    _schlick = None
 from .constants import EPSILON, RAY_REFLECTION_LIMIT
 from .illumination import Light, lighting
 from .protocols import WorldObject
@@ -79,7 +82,7 @@ class World:
 
             if material.reflective > EPSILON and material.transparency > EPSILON:
                 # reflectance = schlick(cmp)
-                reflectance: float = _schlick.schlick(
+                reflectance: float = schlick(
                     cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
                 return surface + reflected * reflectance + (1 - reflectance) * refracted
 
@@ -101,7 +104,7 @@ class World:
 
         if material.reflective > EPSILON and material.transparency > EPSILON:
             # reflectance = schlick(cmp)
-            reflectance = _schlick.schlick(
+            reflectance = schlick(
                 cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
             return color + reflected * reflectance + (1 - reflectance) * refracted
 
@@ -168,17 +171,19 @@ class World:
         return self.color_at(refract_ray, remaining - 1) * cmp.object.material.transparency
 
 
-def schlick(cmp: Computations) -> float:  # reflectance
-    # cos: float = cmp.eyev.dot(cmp.normalv)
+def schlick_fallback(eyev: np.ndarray, normalv: np.ndarray, n1: float, n2: float) -> float:  # reflectance
+    cos: float = eyev.dot(normalv)
 
-    # if cmp.n1 > cmp.n2:
-    #     sin2_t = (cmp.n1 / cmp.n2)**2 * (1 - cos**2)
+    if n1 > n2:
+        sin2_t = (n1 / n2)**2 * (1 - cos**2)
 
-    #     if sin2_t > 1:
-    #         return 1.0
+        if sin2_t > 1:
+            return 1.0
 
-    #     cos = sqrt(1.0 - sin2_t)
+        cos = sqrt(1.0 - sin2_t)
 
-    # r0 = ((cmp.n1 - cmp.n2) / (cmp.n1 + cmp.n2))**2
-    # return r0 + (1 - r0) * (1 - cos)**5
-    return _schlick.schlick(cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
+    r0 = ((n1 - n2) / (n1 + n2))**2
+    return r0 + (1 - r0) * (1 - cos)**5
+
+
+schlick = _schlick.schlick if _schlick is not None else schlick_fallback

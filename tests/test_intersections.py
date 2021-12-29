@@ -186,7 +186,7 @@ def test_total_internal_reflection():
     r = Ray(point(0, 0, sqrt(2) / 2), vector(0, 1, 0))
     xs = [Intersection(-sqrt(2) / 2, s), Intersection(sqrt(2) / 2, s)]
     cmp = Computations(xs[1], r, xs)
-    reflectance = schlick(cmp)
+    reflectance = schlick(cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
     assert abs(reflectance - 1.0) < EPSILON
 
 
@@ -195,7 +195,7 @@ def test_perpendicular_view_angle():
     r = Ray(point(0, 0, 0), vector(0, 1, 0))
     xs = [Intersection(-1, s), Intersection(1, s)]
     cmp = Computations(xs[1], r, xs)
-    reflectance = schlick(cmp)
+    reflectance = schlick(cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
     assert abs(reflectance - 0.04) < EPSILON
 
 
@@ -204,5 +204,5 @@ def test_small_view_angle():
     r = Ray(point(0, 0.99, -2), vector(0, 0, 1))
     xs = [Intersection(1.8589, s)]
     cmp = Computations(xs[0], r, xs)
-    reflectance = schlick(cmp)
+    reflectance = schlick(cmp.eyev, cmp.normalv, cmp.n1, cmp.n2)
     assert abs(reflectance - 0.48873) < EPSILON

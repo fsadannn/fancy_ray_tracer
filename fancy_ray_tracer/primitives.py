@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from math import fabs
+from math import inf as INFINITY
 from math import sqrt
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -12,6 +14,30 @@ from .protocols import WorldObject
 from .ray import Intersection
 from .tuples import vector
 from .utils import rand_id
+
+try:
+    from .compiled import _intersection
+except ImportError:
+    _intersection = None
+
+
+def check_axis_fallback(origin: float, direction: float, epsilon: float, axis_min: float = -1.0, axis_max: float = 1.0) -> Tuple[float, float]:
+    if fabs(direction) >= epsilon:
+        tmin = (axis_min - origin) / direction
+        tmax = (axis_max - origin) / direction
+    else:
+        tmin = (axis_min - origin) * INFINITY
+        tmax = (axis_max - origin) * INFINITY
+
+    if tmin > tmax:
+        temp = tmin
+        tmin = tmax
+        tmax = temp
+
+    return (tmin, tmax)
+
+
+check_axis = _intersection.check_axis if _intersection is not None else check_axis_fallback
 
 
 class Shape(WorldObject):
@@ -87,3 +113,27 @@ def glass_sphere() -> Sphere:
     s.material.transparency = 1.0
     s.material.refractive_index = 1.5
     return s
+
+
+class Cube(Shape):
+    __slots__ = ()
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        ap = np.abs(p[:3])
+        maxc: float = np.max(ap)
+        if abs(ap[0] - maxc) < EPSILON:
+            return vector(p[0], 0, 0)
+        elif abs(ap[1] - maxc) < EPSILON:
+            return vector(0, p[1], 0)
+
+        return vector(0, 0, p[2])
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        xtmin, xtmax = check_axis(origin[0], direction[0], EPSILON)
+        ytmin, ytmax = check_axis(origin[1], direction[1], EPSILON)
+        ztmin, ztmax = check_axis(origin[2], direction[2], EPSILON)
+        tmin = max(xtmin, ytmin, ztmin)
+        tmax = min(xtmax, ytmax, ztmax)
+        if tmin > tmax:
+            return ()
+        return [Intersection(tmin, self), Intersection(tmax, self)]
