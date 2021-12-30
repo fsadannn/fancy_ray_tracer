@@ -253,10 +253,8 @@ class Cylinder(Shape):
         o1 = origin[1]
         d1 = direction[1]
         y = o1 + t0 * d1
-        print(y, self.minimum, self.maximum)
         if self.minimum < y < self.maximum:
             xs.append(Intersection(t0, self))
-        print('2do ', y, self.minimum, self.maximum)
         y = o1 + t1 * d1
         if self.minimum < y < self.maximum:
             xs.append(Intersection(t1, self))
