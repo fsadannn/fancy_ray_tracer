@@ -10,7 +10,7 @@ from .materials import (
     make_material,
 )
 from .matrices import rotX, rotY, rotZ, scaling, sharing, translation, view_transform
-from .primitives import Cube, Cylinder, Plane, Sphere, glass_sphere
+from .primitives import Cone, Cube, Cylinder, Plane, Sphere, glass_sphere
 from .protocols import WorldObject
 from .ray import Computations, Intersection, Ray, hit, hit_sorted, normal_at
 from .tuples import make_color, normalize, point, vector

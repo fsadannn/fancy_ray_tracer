@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import fabs, sqrt
-from typing import Optional, Sequence, Sized, Tuple
+from typing import List, Optional, Sequence, Sized, Tuple
 
 import numpy as np
 
@@ -24,39 +24,6 @@ AXIS_Z_VEC = vector(0, 0, 1)
 NAXIS_X_VEC = vector(-1, 0, 0)
 NAXIS_Y_VEC = vector(0, -1, 0)
 NAXIS_Z_VEC = vector(0, 0, -1)
-
-
-class CuadricSurfaceIntersections(Sized):
-    __slots__ = ("t0", "t1", "count")
-
-    def __init__(self):
-        self.t0: Intersection = None
-        self.t1: Intersection = None
-        self.count = 0
-
-    def __len__(self) -> int:
-        return self.count
-
-    def append(self, it: Intersection):
-        if self.t0 is None:
-            self.t0 = it
-
-        if self.t0.t > it.t:
-            self.t1 = self.t0
-            self.t0 = it
-            return
-
-        self.t1 = it
-        self.count += 1
-
-    def to_list(self):
-        c = self.count
-        if c == 0:
-            return ()
-        elif c == 1:
-            return [self.t0]
-
-        return (self.t0, self.t1)
 
 
 def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray, origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
@@ -246,7 +213,7 @@ class Cylinder(Shape):
             # here we have a perpendicular ray to the caps
             # test if the ray hit one of the caps and if so the the second
             # cap is hit too
-            xs = []
+            xs: List[Intersection] = []
             o1 = origin[1]
             d1 = direction[1]
             d1i = 1 / d1
@@ -281,14 +248,15 @@ class Cylinder(Shape):
         if t0 > t1:
             t0, t1 = t1, t0
 
-        xs = CuadricSurfaceIntersections()
+        xs: List[Intersection] = []
 
         o1 = origin[1]
         d1 = direction[1]
         y = o1 + t0 * d1
+        print(y, self.minimum, self.maximum)
         if self.minimum < y < self.maximum:
             xs.append(Intersection(t0, self))
-
+        print('2do ', y, self.minimum, self.maximum)
         y = o1 + t1 * d1
         if self.minimum < y < self.maximum:
             xs.append(Intersection(t1, self))
@@ -297,7 +265,10 @@ class Cylinder(Shape):
         # point at same time
 
         if not self.closed or len(xs) == 2 or abs(d1) < EPSILON:
-            return xs.to_list()
+            if len(xs) == 2 and xs[0].t > xs[1].t:
+                return [xs[1], xs[0]]
+
+            return xs
 
         d1i = 1 / d1
         t = (self.minimum - o1) * d1i
@@ -307,7 +278,10 @@ class Cylinder(Shape):
             xs.append(Intersection(t, self))
 
         if len(xs) == 2:
-            return xs.to_list()
+            if xs[0].t > xs[1].t:
+                return [xs[1], xs[0]]
+
+            return xs
 
         t = (self.maximum - o1) * d1i
         x = origin[0] + t * direction[0]
@@ -315,7 +289,10 @@ class Cylinder(Shape):
         if x * x + z * z <= 1:
             xs.append(Intersection(t, self))
 
-        return xs.to_list()
+        if len(xs) == 2 and xs[0].t > xs[1].t:
+            return [xs[1], xs[0]]
+
+        return xs
 
 
 class Cone(Shape):
