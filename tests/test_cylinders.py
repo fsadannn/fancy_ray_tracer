@@ -86,5 +86,4 @@ def test_closed():
     ]
     for origin, direction in zip(origins, directions):
         its = c.intersect(origin, normalize(direction))
-        print(origin, direction)
         assert len(its) == 2

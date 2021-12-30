@@ -24,6 +24,7 @@ AXIS_Z_VEC = vector(0, 0, 1)
 NAXIS_X_VEC = vector(-1, 0, 0)
 NAXIS_Y_VEC = vector(0, -1, 0)
 NAXIS_Z_VEC = vector(0, 0, -1)
+ZERO = vector(0, 0, 0)
 
 
 def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray, origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
@@ -276,10 +277,7 @@ class Cylinder(Shape):
             xs.append(Intersection(t, self))
 
         if len(xs) == 2:
-            if xs[0].t > xs[1].t:
-                return [xs[1], xs[0]]
-
-            return xs
+            return [xs[1], xs[0]]
 
         t = (self.maximum - o1) * d1i
         x = origin[0] + t * direction[0]
@@ -294,17 +292,103 @@ class Cylinder(Shape):
 
 
 class Cone(Shape):
-    __slots__ = ("minimum", "maximum", "closed")
+    __slots__ = ("minimum", "maximum", "closed", "minimum2", "maximum2")
 
     def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY, closed: bool = False, shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
         self.minimum = minimum
+        self.minimum2 = minimum * minimum
         self.maximum = maximum
+        self.maximum2 = maximum * maximum
         self.closed = closed
 
     def normal_at(self, p: np.ndarray) -> np.ndarray:
-        return vector(p[0], 0, p[2])
+        d = p[0] * p[0] + p[2] * p[2]
+
+        if d < self.maximum2 and p[1] > self.maximum - EPSILON:
+            return AXIS_Y_VEC
+        if d < self.minimum2 and p[1] < self.minimum + EPSILON:
+            return NAXIS_Y_VEC
+
+        if p[1] > 0:
+            return vector(p[0], -sqrt(d), p[2])
+
+        return vector(p[0], sqrt(d), p[2])
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
-        a = direction[0] * direction[0] + direction[2] * direction[2]
-        return []
+        dy = direction[1]
+        oy = origin[1]
+        a = direction[0] * direction[0] + direction[2] * direction[2] - dy * dy
+        b = 2 * (origin[0] * direction[0] + origin[2] * direction[2] - oy * dy)
+        c = origin[0] * origin[0] + origin[2] * origin[2] - oy * oy
+
+        if abs(a) < EPSILON:
+            t1 = -c / (2 * b)
+
+            if abs(b) < EPSILON:
+                return ()
+
+            if not self.closed:
+                return [Intersection(t1, self)]
+
+            dyi = 1 / dy
+            t = (self.minimum - oy) * dyi
+            x = origin[0] + t * direction[0]
+            z = origin[2] + t * direction[2]
+            if x * x + z * z <= self.minimum2:
+                if (t < t1):
+                    return [Intersection(t, self), Intersection(t1, self)]
+                return [Intersection(t1, self), Intersection(t, self)]
+
+            t = (self.maximum - oy) * dyi
+            x = origin[0] + t * direction[0]
+            z = origin[2] + t * direction[2]
+            if x * x + z * z <= self.maximum2:
+                if (t < t1):
+                    return [Intersection(t, self), Intersection(t1, self)]
+                return [Intersection(t1, self), Intersection(t, self)]
+
+            return ()
+
+        disc = b * b - 4 * a * c
+
+        if disc < 0:
+            return ()
+
+        sqdc = sqrt(disc)
+        a21 = 1 / (2 * a)
+        t0 = (-b - sqdc) * a21
+        t1 = (-b + sqdc) * a21
+
+        xs: List[Intersection] = []
+
+        o1 = origin[1]
+        d1 = direction[1]
+        y = o1 + t0 * d1
+        if self.minimum < y < self.maximum:
+            xs.append(Intersection(t0, self))
+        y = o1 + t1 * d1
+        if self.minimum < y < self.maximum:
+            xs.append(Intersection(t1, self))
+
+        if not self.closed:
+            return xs
+
+        dyi = 1 / dy
+        t = (self.minimum - oy) * dyi
+        x = origin[0] + t * direction[0]
+        z = origin[2] + t * direction[2]
+        if x * x + z * z <= self.minimum2:
+            xs.append(Intersection(t, self))
+
+        t = (self.maximum - oy) * dyi
+        x = origin[0] + t * direction[0]
+        z = origin[2] + t * direction[2]
+        if x * x + z * z <= self.maximum2:
+            xs.append(Intersection(t, self))
+
+        if len(xs) < 2:
+            return xs
+
+        xs.sort()
+        return xs
