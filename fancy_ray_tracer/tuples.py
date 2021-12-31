@@ -27,5 +27,5 @@ def normalize(x: np.ndarray) -> np.ndarray:
 
 
 def cross(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    cx = np.cross(a, b)
+    cx = np.cross(a[:3], b[:3])
     return np.append(cx, 0.0)

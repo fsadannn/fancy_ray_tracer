@@ -17,6 +17,7 @@ from .primitives import (
     Group,
     Plane,
     Sphere,
+    Triangle,
     glass_sphere,
     make_box,
 )

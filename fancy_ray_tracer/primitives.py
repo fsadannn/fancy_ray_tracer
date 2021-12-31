@@ -4,7 +4,6 @@ from math import fabs, sqrt
 from typing import List, Optional, Sequence
 
 import numpy as np
-from numpy.core.fromnumeric import shape
 
 from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON, INFINITY
 from .materials import make_material
@@ -537,3 +536,46 @@ def make_box(shape: WorldObject) -> BoundingBox:
 
     if isinstance(shape, BoundingBox):
         return shape
+
+
+class Triangle(Shape):
+    __slots__ = ("p1", "p2", "p3", "e1", "e2", "normal")
+
+    def __init__(self, p1: np.ndarray, p2: np.ndarray, p3: np.ndarray, shapeId: Optional[str] = None):
+        super().__init__(shapeId=shapeId)
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
+        self.e1 = p2 - p1
+        self.e2 = p3 - p1
+        normal: np.ndarray = np.cross(self.e2[:3], self.e1[:3])
+        nm = sqrt(normal.dot(normal))
+        self.normal = np.append((1 / nm) * normal, 0)
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        return self.normal
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        direction = direction[:3]
+        dir_cross_e2: np.ndarray = np.cross(direction, self.e2[:3])
+        det: float = self.e1[:3].dot(dir_cross_e2)
+
+        if abs(det) < EPSILON:
+            return ()
+
+        f: float = 1.0 / det
+        p1_to_origin: np.ndarray = origin - self.p1
+        p1_to_origin = p1_to_origin[:3]
+        u: float = f * p1_to_origin.dot(dir_cross_e2)
+
+        if u < 0 or u > 1:
+            return ()
+
+        origin_cross_e1: np.ndarray = np.cross(p1_to_origin, self.e1[:3])
+        v: float = f * direction.dot(origin_cross_e1)
+        if v < 0 or (u + v) > 1:
+            return ()
+
+        t: float = f * self.e2[:3].dot(origin_cross_e1)
+
+        return [Intersection(t, self)]
