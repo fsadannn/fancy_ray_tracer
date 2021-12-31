@@ -35,6 +35,7 @@ middle.material.specular = 0.3
 middle.material.reflective = 0.8
 # middle.material.refractive_index = 1.5
 # middle.material.transparency = 1.0
+# middle_box = make_box(middle)
 
 right = Cylinder(0, 2, closed=True)
 right.set_transform(
@@ -46,6 +47,7 @@ right.material.specular = 0.3
 right.material.reflective = 0.2
 #right.material.refractive_index = 1.5
 #right.material.transparency = 0.9
+# right_box = make_box(right)
 
 left = Sphere()
 left.set_transform(
@@ -54,6 +56,7 @@ left.material = make_material()
 left.material.color = make_color(1, 0.8, 0.1)
 left.material.diffuse = 0.7
 left.material.specular = 0.3
+# left_box = make_box(left)
 
 other = Cone(-0.5, 0.5, closed=True)
 other.set_transform(
@@ -63,15 +66,30 @@ other.material.color = make_color(0, 0, 0.8)
 other.material.diffuse = 0.7
 other.material.specular = 0.3
 other.material.reflective = 0.6
+other_box = make_box(other)
+# print(other_box.bound_min, other_box.bound_max)
+
+g = Group()
+g.add_shape(middle)
+g.add_shape(left)
+g.add_shape(right)
+g.add_shape(other_box)
+box = make_box(g)
+
 
 world = World(Light(point(-10, 10, -10), make_color(1, 1, 1)))
 world.add_object(floor)
 world.add_object(left_wall)
 world.add_object(right_wall)
-world.add_object(middle)
-world.add_object(right)
-world.add_object(left)
-world.add_object(other)
+world.add_object(g)
+# world.add_object(middle)
+# world.add_object(right)
+# world.add_object(left)
+# world.add_object(other)
+# world.add_object(middle_box)
+# world.add_object(right_box)
+# world.add_object(left_box)
+# world.add_object(other_box)
 
 hsize = 350
 vsize = 225

@@ -442,18 +442,20 @@ class BoundingBox(Shape):
         self.bound_max: np.ndarray = bound_max
         self.bound_min: np.ndarray = bound_min
         self.shape: WorldObject = shape
+        self.inv_transform = self.shape.inv_transform
+        self.transform = self.shape.transform
 
     def set_transform(self, transform: np.ndarray) -> None:
         super().set_transform(transform)
-        self.shape.transform = self.transform
-        self.shape.inv_transform = self.inv_transform
+        self.inv_transform = self.shape.inv_transform
+        self.transform = self.shape.transform
 
     def normal_at(self, p: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
         it = aabb_box_intersect(
-            BOX_UNITARY_MIN_BOUND, BOX_UNITARY_MAX_BOUND, origin, direction, EPSILON)
+            self.bound_min, self.bound_max, origin, direction, EPSILON)
         if it is None:
             return ()
         return self.shape.intersect(origin, direction)
@@ -492,13 +494,13 @@ def make_box(shape: WorldObject) -> BoundingBox:
         minb: np.ndarray = BOX_UNITARY_MIN_BOUND.copy()
         maxb: np.ndarray = BOX_UNITARY_MAX_BOUND.copy()
         if shape.closed:
-            xz = max(shape.minimum2, shape.maximum2)
+            xz = max(abs(shape.minimum), abs(shape.maximum))
             minb[0] = -xz
             minb[1] = shape.minimum
             minb[2] = -xz
-            maxb[0] = -xz
+            maxb[0] = xz
             maxb[1] = shape.maximum
-            maxb[2] = -xz
+            maxb[2] = xz
         else:
             minb[0] = -np.inf
             minb[1] = -np.inf
@@ -517,8 +519,12 @@ def make_box(shape: WorldObject) -> BoundingBox:
         minz = np.inf
         for sh in shape.shapes:
             b = make_box(sh)
-            pmin = sh.transform.dot(b.bound_min)
-            pmax = sh.transform.dot(b.bound_max)
+            pmin = sh.inv_transform.T.dot(b.bound_min)
+            pmax = sh.inv_transform.T.dot(b.bound_max)
+            # print(sh)
+            # print(b.bound_min, pmin)
+            # print(b.bound_max, pmax)
+
             maxx = max(pmax[0], maxx)
             maxy = max(pmax[1], maxy)
             maxz = max(pmax[2], maxz)
@@ -528,3 +534,6 @@ def make_box(shape: WorldObject) -> BoundingBox:
         pmin = point(minx, miny, minz)
         pmax = point(maxx, maxy, maxz)
         return BoundingBox(pmin, pmax, shape)
+
+    if isinstance(shape, BoundingBox):
+        return shape
