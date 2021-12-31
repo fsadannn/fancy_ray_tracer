@@ -446,7 +446,7 @@ class BoundingBox(Shape):
         self.transform = self.shape.transform
 
     def set_transform(self, transform: np.ndarray) -> None:
-        super().set_transform(transform)
+        self.shape.set_transform(transform)
         self.inv_transform = self.shape.inv_transform
         self.transform = self.shape.transform
 
@@ -519,8 +519,8 @@ def make_box(shape: WorldObject) -> BoundingBox:
         minz = np.inf
         for sh in shape.shapes:
             b = make_box(sh)
-            pmin = sh.inv_transform.T.dot(b.bound_min)
-            pmax = sh.inv_transform.T.dot(b.bound_max)
+            pmin = sh.transform.dot(b.bound_min)
+            pmax = sh.transform.dot(b.bound_max)
             # print(sh)
             # print(b.bound_min, pmin)
             # print(b.bound_max, pmax)
