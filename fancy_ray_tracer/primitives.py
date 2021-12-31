@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import fabs, sqrt
-from typing import List, Optional, Sequence, Sized, Tuple
+from typing import List, Optional, Sequence
 
 import numpy as np
 
@@ -27,7 +27,8 @@ NAXIS_Z_VEC = vector(0, 0, -1)
 ZERO = vector(0, 0, 0)
 
 
-def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray, origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
+def aabb_box_intersect_fallback(bound_min: np.ndarray, bound_max: np.ndarray,
+                                origin: np.ndarray, direction: np.ndarray, epsilon: float):  # smith method
     temp = direction[0]
     if fabs(temp) >= epsilon:
         temp = 1 / temp
@@ -95,6 +96,7 @@ class Shape(WorldObject):
         self.transform: np.ndarray = identity()
         self.material = make_material()
         self.inv_transform: np.ndarray = self.transform
+        self.parent: Optional[WorldObject] = None
 
     def color_at(self, point: np.ndarray) -> np.ndarray:
         point = self.inv_transform.dot(point)
@@ -138,7 +140,7 @@ class Sphere(Shape):
 
 
 class Plane(Shape):
-    __slots__ = ("_normalv")
+    __slots__ = tuple(["_normalv"])
 
     def __init__(self, shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
@@ -170,7 +172,8 @@ class Cube(Shape):
         maxc: float = np.max(ap)
         if abs(ap[0] - maxc) < EPSILON:
             return vector(p[0], 0, 0)
-        elif abs(ap[1] - maxc) < EPSILON:
+
+        if abs(ap[1] - maxc) < EPSILON:
             return vector(0, p[1], 0)
 
         return vector(0, 0, p[2])
@@ -187,7 +190,8 @@ class Cube(Shape):
 class Cylinder(Shape):
     __slots__ = ("minimum", "maximum", "closed")
 
-    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY, closed: bool = False, shapeId: Optional[str] = None):
+    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY,
+                 closed: bool = False, shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
         self.minimum = minimum
         self.maximum = maximum
@@ -294,7 +298,8 @@ class Cylinder(Shape):
 class Cone(Shape):
     __slots__ = ("minimum", "maximum", "closed", "minimum2", "maximum2")
 
-    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY, closed: bool = False, shapeId: Optional[str] = None):
+    def __init__(self, minimum: float = -INFINITY, maximum: float = INFINITY,
+                 closed: bool = False, shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
         self.minimum = minimum
         self.minimum2 = minimum * minimum
@@ -336,7 +341,7 @@ class Cone(Shape):
             x = origin[0] + t * direction[0]
             z = origin[2] + t * direction[2]
             if x * x + z * z <= self.minimum2:
-                if (t < t1):
+                if t < t1:
                     return [Intersection(t, self), Intersection(t1, self)]
                 return [Intersection(t1, self), Intersection(t, self)]
 
@@ -344,7 +349,7 @@ class Cone(Shape):
             x = origin[0] + t * direction[0]
             z = origin[2] + t * direction[2]
             if x * x + z * z <= self.maximum2:
-                if (t < t1):
+                if t < t1:
                     return [Intersection(t, self), Intersection(t1, self)]
                 return [Intersection(t1, self), Intersection(t, self)]
 
@@ -392,3 +397,16 @@ class Cone(Shape):
 
         xs.sort()
         return xs
+
+
+class Group(Shape):
+    __slots__ = ()
+
+    def __init__(self, shapeId: Optional[str] = None, shapes: Optional[Sequence[WorldObject]] = ()):
+        super().__init__(shapeId=shapeId)
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        raise NotImplementedError

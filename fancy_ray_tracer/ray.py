@@ -3,7 +3,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from functools import total_ordering
 from math import sqrt
-from typing import Dict, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 import numpy as np
 
@@ -17,14 +17,14 @@ from .utils import equal
 class Intersection:
     __slots__ = ("t", "object")
 
-    def __init__(self, t: float, object: WorldObject):
+    def __init__(self, t: float, obj: WorldObject):
         self.t: float = t
-        self.object: WorldObject = object
+        self.object: WorldObject = obj
 
     def __eq__(self, other: Intersection) -> bool:
         return abs(self.t - other.t) < EPSILON and self.object == other.object
 
-    def __lt__(self, other: Intersection):
+    def __lt__(self, other: Intersection) -> bool:
         return self.t < other.t
 
 
@@ -59,7 +59,7 @@ class Computations:
                  "normalv", "inside", "over_point", "reflectv",
                  "n1", "n2", "under_point")
 
-    def __init__(self, intersection: Intersection, ray: Ray, xs: Sequence[Intersection] = []) -> None:
+    def __init__(self, intersection: Intersection, ray: Ray, xs: Sequence[Intersection] = ()) -> None:
         self.t: float = intersection.t
         self.object: WorldObject = intersection.object
         self.point: np.ndarray = ray.origin + ray.direction * self.t
@@ -136,10 +136,10 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     return intersections[index]
 
 
-def normal_at(object: WorldObject, p: np.ndarray) -> np.ndarray:
-    tinv = object.inv_transform
+def normal_at(obj: WorldObject, p: np.ndarray) -> np.ndarray:
+    tinv = obj.inv_transform
     object_point: np.ndarray = tinv.dot(p)
-    object_normal: np.ndarray = object.normal_at(object_point)
+    object_normal: np.ndarray = obj.normal_at(object_point)
     world_normal: np.ndarray = tinv.T.dot(object_normal)
     world_normal[3] = 0.0
     # normalize inplace

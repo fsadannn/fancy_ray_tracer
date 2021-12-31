@@ -55,10 +55,17 @@ class IntersectionP(Protocol):
     t: float
     object: WorldObject
 
+    def __eq__(self, other: IntersectionP) -> bool:
+        raise NotImplementedError
+
+    def __lt__(self, other: IntersectionP) -> bool:
+        raise NotImplementedError
+
 
 class WorldObject(Transformable, ColorAtPoint, Protocol):
     id: str
     material: MaterialP
+    parent: Optional[WorldObject]
 
     def __eq__(self, other: WorldObject) -> bool:
         raise NotImplementedError

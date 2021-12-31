@@ -23,12 +23,12 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
     return v - (2 * v.dot(n)) * n
 
 
-def lighting(object: WorldObject, light: Light, point: np.ndarray,
+def lighting(obj: WorldObject, light: Light, point: np.ndarray,
              eyev: np.ndarray, normalv: np.ndarray, in_shadow: bool = False):
     # combine the surface color with the light's color/intensity
-    material = object.material
+    material = obj.material
     # color = object.color_at(point)
-    effective_color = object.color_at(point) * light.intensity
+    effective_color = obj.color_at(point) * light.intensity
 
     # compute the ambient contribution
     ambient = effective_color * material.ambient

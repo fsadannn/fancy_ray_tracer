@@ -17,7 +17,8 @@ class Camera:
                  "transform", "inv_transform",
                  "half_width", "half_height", "pixel_size")
 
-    def __init__(self, hsize: int, vsize: int, field_of_view: float, transform: Optional[np.ndarray] = None) -> None:
+    def __init__(self, hsize: int, vsize: int, field_of_view: float,
+                 transform: Optional[np.ndarray] = None) -> None:
         self.hsize: int = hsize
         self.vsize: int = vsize
         self.field_of_view: float = field_of_view
