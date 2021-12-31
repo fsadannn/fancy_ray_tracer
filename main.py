@@ -47,7 +47,6 @@ right.material.reflective = 0.2
 #right.material.refractive_index = 1.5
 #right.material.transparency = 0.9
 
-
 left = Sphere()
 left.set_transform(
     chain_ops([translation(-1.5, 0.33, -0.75), scaling(0.33, 0.33, 0.33), ]))
@@ -56,6 +55,15 @@ left.material.color = make_color(1, 0.8, 0.1)
 left.material.diffuse = 0.7
 left.material.specular = 0.3
 
+other = Cone(-0.5, 0.5, closed=True)
+other.set_transform(
+    chain_ops([translation(-2, 1.5, -0.75), rotX(PI / 6), rotZ(PI / 6)]))
+other.material = make_material()
+other.material.color = make_color(0, 0, 0.8)
+other.material.diffuse = 0.7
+other.material.specular = 0.3
+other.material.reflective = 0.6
+
 world = World(Light(point(-10, 10, -10), make_color(1, 1, 1)))
 world.add_object(floor)
 world.add_object(left_wall)
@@ -63,6 +71,7 @@ world.add_object(right_wall)
 world.add_object(middle)
 world.add_object(right)
 world.add_object(left)
+world.add_object(other)
 
 hsize = 350
 vsize = 225
@@ -73,4 +82,5 @@ camera.set_transform(view_transform(
 canvas = Canvas((hsize, vsize))
 camera.render(world, canvas)
 # camera.render_sequential(world, canvas)
+# canvas.save_img("scene.jpg")
 canvas.canvas.show()
