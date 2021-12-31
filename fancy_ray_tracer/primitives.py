@@ -93,8 +93,8 @@ class Shape(WorldObject):
 
     def __init__(self, shapeId: Optional[str] = None):
         self.id: str = shapeId if shapeId else rand_id()
-        self.transform: np.ndarray = identity()
         self.material = make_material()
+        self.transform: np.ndarray = identity()
         self.inv_transform: np.ndarray = self.transform
         self.parent: Optional[WorldObject] = None
 
@@ -400,13 +400,34 @@ class Cone(Shape):
 
 
 class Group(Shape):
-    __slots__ = ()
+    __slots__ = ("shapes")
 
     def __init__(self, shapeId: Optional[str] = None, shapes: Optional[Sequence[WorldObject]] = ()):
         super().__init__(shapeId=shapeId)
+        self.shapes: List[WorldObject] = list(shapes)
+
+    def add_shape(self, shape: WorldObject):
+        shape.parent = self
+        self.shapes.append(shape)
 
     def normal_at(self, p: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
-        raise NotImplementedError
+        xs: List[Intersection] = []
+
+        it_count: int = 0
+        for shape in self.shapes:
+            iv = shape.inv_transform
+            o: np.ndarray = iv.dot(origin)
+            d: np.ndarray = iv.dot(direction)
+            its = shape.intersect(o, d)
+            it_count += len(its) > 0
+            xs.extend(its)
+
+        if len(xs) < 2 or it_count < 2:
+            return xs
+
+        xs.sort()
+
+        return xs

@@ -49,4 +49,4 @@ build-ext-win:
 
 .PHONY: build-ext
 build-ext:
-	poetry run python build.py build_ext -v --inplace -DMS_WIN64
+	poetry run python build.py build_ext -v --inplace

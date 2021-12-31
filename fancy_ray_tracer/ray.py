@@ -137,13 +137,37 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
 
 
 def normal_at(obj: WorldObject, p: np.ndarray) -> np.ndarray:
-    tinv = obj.inv_transform
-    object_point: np.ndarray = tinv.dot(p)
+    if obj.parent is None:
+        tinv = obj.inv_transform
+        object_point: np.ndarray = tinv.dot(p)
+        object_normal: np.ndarray = obj.normal_at(object_point)
+        world_normal: np.ndarray = tinv.T.dot(object_normal)
+        world_normal[3] = 0.0
+        # normalize inplace
+        # world_normal = normalize(world_normal)
+        nm: float = sqrt(world_normal.dot(world_normal))
+        world_normal *= (1.0 / nm)
+        return world_normal
+
+    object_point = world_to_object(obj, p)
     object_normal: np.ndarray = obj.normal_at(object_point)
-    world_normal: np.ndarray = tinv.T.dot(object_normal)
-    world_normal[3] = 0.0
-    # normalize inplace
-    # world_normal = normalize(world_normal)
-    nm: float = sqrt(world_normal.dot(world_normal))
-    world_normal *= (1.0 / nm)
+    world_normal = normal_to_world(obj, object_normal)
     return world_normal
+
+
+def world_to_object(shape: WorldObject, p: np.ndarray) -> np.ndarray:
+    if shape.parent is not None:
+        p = world_to_object(shape.parent, p)
+
+    return shape.inv_transform.dot(p)
+
+
+def normal_to_world(shape: WorldObject, normal: np.ndarray) -> np.ndarray:
+    normal = shape.inv_transform.T.dot(normal)
+    normal[3] = 0.0
+    nm: float = sqrt(normal.dot(normal))
+    normal *= (1.0 / nm)
+    if shape.parent is not None:
+        normal = normal_to_world(shape.parent, normal)
+
+    return normal

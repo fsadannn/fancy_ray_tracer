@@ -15,8 +15,8 @@ def build_ext(path: str, use_numpy=True):
     return exts
 
 
-#extension = build_ext('fancy_ray_tracer/compiled/*.pyx')
-extension = build_ext('fancy_ray_tracer/compiled/_intersection.pyx')
+extension = build_ext('fancy_ray_tracer/compiled/*.pyx')
+#extension = build_ext('fancy_ray_tracer/compiled/_intersection.pyx')
 # define_macros=[("CYTHON_TRACE_NOGIL", "1")]
 
 setup(ext_modules=extension, verbose=3,)
