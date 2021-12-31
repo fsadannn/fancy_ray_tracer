@@ -8,15 +8,15 @@ class MistmatchTypeError(Exception):
 
 
 def make_color(r: float, g: float, b: float) -> np.ndarray:
-    return np.array([r, g, b], dtype=np.float64)
+    return np.array((r, g, b), dtype=np.float64)
 
 
 def point(x: float, y: float, z: float) -> np.ndarray:
-    return np.array([x, y, z, 1], dtype=np.float64)
+    return np.array((x, y, z, 1), dtype=np.float64)
 
 
 def vector(x: float, y: float, z: float) -> np.ndarray:
-    return np.array([x, y, z, 0], dtype=np.float64)
+    return np.array((x, y, z, 0), dtype=np.float64)
 
 
 def normalize(x: np.ndarray) -> np.ndarray:

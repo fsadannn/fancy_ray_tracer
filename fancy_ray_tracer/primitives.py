@@ -4,13 +4,14 @@ from math import fabs, sqrt
 from typing import List, Optional, Sequence
 
 import numpy as np
+from numpy.core.fromnumeric import shape
 
 from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON, INFINITY
 from .materials import make_material
 from .matrices import identity
 from .protocols import WorldObject
 from .ray import Intersection
-from .tuples import vector
+from .tuples import point, vector
 from .utils import rand_id
 
 try:
@@ -402,7 +403,7 @@ class Cone(Shape):
 class Group(Shape):
     __slots__ = ("shapes")
 
-    def __init__(self, shapeId: Optional[str] = None, shapes: Optional[Sequence[WorldObject]] = ()):
+    def __init__(self, shapes: Optional[Sequence[WorldObject]] = (), shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
         self.shapes: List[WorldObject] = list(shapes)
 
@@ -431,3 +432,99 @@ class Group(Shape):
         xs.sort()
 
         return xs
+
+
+class BoundingBox(Shape):
+    __slots__ = ("bound_min", "bound_max", "shape")
+
+    def __init__(self, bound_min: np.ndarray, bound_max: np.ndarray, shape: WorldObject, shapeId: Optional[str] = None):
+        super().__init__(shapeId=shapeId)
+        self.bound_max: np.ndarray = bound_max
+        self.bound_min: np.ndarray = bound_min
+        self.shape: WorldObject = shape
+
+    def set_transform(self, transform: np.ndarray) -> None:
+        super().set_transform(transform)
+        self.shape.transform = self.transform
+        self.shape.inv_transform = self.inv_transform
+
+    def normal_at(self, p: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        it = aabb_box_intersect(
+            BOX_UNITARY_MIN_BOUND, BOX_UNITARY_MAX_BOUND, origin, direction, EPSILON)
+        if it is None:
+            return ()
+        return self.shape.intersect(origin, direction)
+
+
+def make_box(shape: WorldObject) -> BoundingBox:
+    if isinstance(shape, Sphere):
+        return BoundingBox(BOX_UNITARY_MIN_BOUND, BOX_UNITARY_MAX_BOUND, shape)
+
+    if isinstance(shape, Cube):
+        return BoundingBox(BOX_UNITARY_MIN_BOUND, BOX_UNITARY_MAX_BOUND, shape)
+
+    if isinstance(shape, Plane):
+        minb: np.ndarray = BOX_UNITARY_MIN_BOUND.copy()
+        maxb: np.ndarray = BOX_UNITARY_MAX_BOUND.copy()
+        minb[0] = -np.inf
+        minb[1] = 0
+        minb[2] = -np.inf
+        maxb[0] = np.inf
+        maxb[1] = 0
+        maxb[2] = np.inf
+        return BoundingBox(minb, maxb, shape)
+
+    if isinstance(shape, Cylinder):
+        minb: np.ndarray = BOX_UNITARY_MIN_BOUND.copy()
+        maxb: np.ndarray = BOX_UNITARY_MAX_BOUND.copy()
+        if shape.closed:
+            minb[1] = shape.minimum
+            maxb[1] = shape.maximum
+        else:
+            minb[1] = -np.inf
+            maxb[1] = np.inf
+        return BoundingBox(minb, maxb, shape)
+
+    if isinstance(shape, Cone):
+        minb: np.ndarray = BOX_UNITARY_MIN_BOUND.copy()
+        maxb: np.ndarray = BOX_UNITARY_MAX_BOUND.copy()
+        if shape.closed:
+            xz = max(shape.minimum2, shape.maximum2)
+            minb[0] = -xz
+            minb[1] = shape.minimum
+            minb[2] = -xz
+            maxb[0] = -xz
+            maxb[1] = shape.maximum
+            maxb[2] = -xz
+        else:
+            minb[0] = -np.inf
+            minb[1] = -np.inf
+            minb[2] = -np.inf
+            maxb[0] = np.inf
+            maxb[1] = np.inf
+            maxb[2] = np.inf
+        return BoundingBox(minb, maxb, shape)
+
+    if isinstance(shape, Group):
+        maxx = -np.inf
+        maxy = -np.inf
+        maxz = -np.inf
+        minx = np.inf
+        miny = np.inf
+        minz = np.inf
+        for sh in shape.shapes:
+            b = make_box(sh)
+            pmin = sh.transform.dot(b.bound_min)
+            pmax = sh.transform.dot(b.bound_max)
+            maxx = max(pmax[0], maxx)
+            maxy = max(pmax[1], maxy)
+            maxz = max(pmax[2], maxz)
+            minx = min(pmin[0], minx)
+            miny = min(pmin[1], miny)
+            minz = min(pmin[2], minz)
+        pmin = point(minx, miny, minz)
+        pmax = point(maxx, maxy, maxz)
+        return BoundingBox(pmin, pmax, shape)
