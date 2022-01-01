@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 from math import fabs, sqrt
-from typing import List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 
-from .constants import BOX_UNITARY_MAX_BOUND, BOX_UNITARY_MIN_BOUND, EPSILON, INFINITY
-from .materials import make_material
+from .constants import (
+    BOX_UNITARY_MAX_BOUND,
+    BOX_UNITARY_MIN_BOUND,
+    EPSILON,
+    IDENTITY,
+    INFINITY,
+)
+from .materials import Material, make_material
 from .matrices import identity
-from .protocols import WorldObject
+from .protocols import TriangleFaces, WorldObject
 from .ray import Intersection
 from .tuples import point, vector
 from .utils import rand_id
@@ -105,7 +111,7 @@ class Shape(WorldObject):
     def __eq__(self, other: WorldObject) -> bool:
         return self.id == other.id
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -115,7 +121,7 @@ class Shape(WorldObject):
 class Sphere(Shape):
     __slots__ = ()
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         p[3] = 0.0
         return p
 
@@ -146,7 +152,7 @@ class Plane(Shape):
         super().__init__(shapeId=shapeId)
         self._normalv: np.ndarray = vector(0, 1, 0)
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         return self._normalv
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -167,7 +173,7 @@ def glass_sphere() -> Sphere:
 class Cube(Shape):
     __slots__ = ()
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         ap = np.abs(p[:3])
         maxc: float = np.max(ap)
         if abs(ap[0] - maxc) < EPSILON:
@@ -197,7 +203,7 @@ class Cylinder(Shape):
         self.maximum = maximum
         self.closed = closed
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         d = p[0] * p[0] + p[2] * p[2]
 
         if d < 1:
@@ -307,7 +313,7 @@ class Cone(Shape):
         self.maximum2 = maximum * maximum
         self.closed = closed
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         d = p[0] * p[0] + p[2] * p[2]
 
         if d < self.maximum2 and p[1] > self.maximum - EPSILON:
@@ -410,7 +416,7 @@ class Group(Shape):
         shape.parent = self
         self.shapes.append(shape)
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -449,7 +455,7 @@ class BoundingBox(Shape):
         self.inv_transform = self.shape.inv_transform
         self.transform = self.shape.transform
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -534,6 +540,29 @@ def make_box(shape: WorldObject) -> BoundingBox:
         pmax = point(maxx, maxy, maxz)
         return BoundingBox(pmin, pmax, shape)
 
+    if isinstance(shape, Triangle):
+        maxx = max(shape.p1[0], shape.p2[0], shape.p3[0])
+        maxy = max(shape.p1[1], shape.p2[1], shape.p3[1])
+        maxz = max(shape.p1[2], shape.p2[2], shape.p3[2])
+        minx = min(shape.p1[0], shape.p2[0], shape.p3[0])
+        miny = min(shape.p1[1], shape.p2[1], shape.p3[1])
+        minz = min(shape.p1[2], shape.p2[2], shape.p3[2])
+        pmin = point(minx, miny, minz)
+        pmax = point(maxx, maxy, maxz)
+        return BoundingBox(pmin, pmax, shape)
+
+    if isinstance(shape, TriangleMesh):
+        vx = np.asfarray(shape.vertices)
+        maxx = np.max(vx[:, 0])
+        maxy = np.max(vx[:, 1])
+        maxz = np.max(vx[:, 2])
+        minx = np.min(vx[:, 0])
+        miny = np.min(vx[:, 1])
+        minz = np.min(vx[:, 2])
+        pmin = point(minx, miny, minz)
+        pmax = point(maxx, maxy, maxz)
+        return BoundingBox(pmin, pmax, shape)
+
     if isinstance(shape, BoundingBox):
         return shape
 
@@ -552,7 +581,7 @@ class Triangle(Shape):
         nm = sqrt(normal.dot(normal))
         self.normal = np.append((1 / nm) * normal, 0)
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
         return self.normal
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -579,3 +608,87 @@ class Triangle(Shape):
         t: float = f * self.e2[:3].dot(origin_cross_e1)
 
         return [Intersection(t, self)]
+
+
+class SmoothTriangle(Shape):
+    __slots__ = ("n1", "n2", "n3")
+
+    def __init__(self, n1: np.ndarray, n2: np.ndarray, n3: np.ndarray,
+                 material: Material, shapeId: Optional[str] = None):
+        # super().__init__(shapeId=shapeId)
+        self.n1 = n1
+        self.n2 = n2
+        self.n3 = n3
+        self.transform = IDENTITY
+        self.inv_transform = IDENTITY
+        self.parent = None
+        self.material = material
+        self.id = shapeId
+
+    def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
+        c = 1 - it.u - it.v
+        return it.u * self.n1 + it.v * self.n2 + c * self.n3
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        raise NotImplementedError
+
+
+# TODO: Implement textures
+class TriangleMesh(Shape):
+    __slots__ = ("vertices", "faces_groups", "normals",
+                 "normals_groups", "textures", "texture_groups")
+
+    def __init__(self, vertices: List[np.ndarray], faces_group: TriangleFaces,
+                 normals: List[np.ndarray], normals_group: TriangleFaces = None,
+                 textures: Optional[List[np.ndarray]] = None, texture_group: Optional[TriangleFaces] = None,
+                 shapeId: Optional[str] = None):
+        super().__init__(shapeId=shapeId)
+        self.vertices: List[np.ndarray] = vertices
+        self.faces_groups: TriangleFaces = faces_group
+        self.normals: List[np.ndarray] = normals
+        self.normals_groups: TriangleFaces = normals_group
+        self.textures: List[np.ndarray] = textures
+        self.texture_groups: TriangleFaces = texture_group
+
+    def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
+        raise NotImplementedError
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        xs: Sequence[Intersection] = []
+        for n, face in enumerate(self.faces_groups):
+            p1: np.ndarray = self.vertices[face[0]]
+            p2: np.ndarray = self.vertices[face[1]]
+            p3: np.ndarray = self.vertices[face[2]]
+            e1: np.ndarray = p2 - p1
+            e2: np.ndarray = p3 - p1
+
+            direction = direction[:3]
+            dir_cross_e2: np.ndarray = np.cross(direction, e2[:3])
+            det: float = e1[:3].dot(dir_cross_e2)
+
+            if abs(det) < EPSILON:
+                continue
+
+            f: float = 1.0 / det
+            p1_to_origin: np.ndarray = origin - p1
+            p1_to_origin = p1_to_origin[:3]
+            u: float = f * p1_to_origin.dot(dir_cross_e2)
+
+            if u < 0 or u > 1:
+                continue
+
+            origin_cross_e1: np.ndarray = np.cross(p1_to_origin, e1[:3])
+            v: float = f * direction.dot(origin_cross_e1)
+            if v < 0 or (u + v) > 1:
+                continue
+
+            t: float = f * e2[:3].dot(origin_cross_e1)
+            nn = self.normals_groups[n]
+            xs.append(Intersection(t, SmoothTriangle(
+                self.normals[nn[0]], self.normals[nn[1]], self.normals[nn[2]], self.material,), u, v))
+
+        if len(xs) < 2:
+            return xs
+
+        xs.sort()
+        return xs

@@ -15,11 +15,13 @@ from .utils import equal
 
 @total_ordering
 class Intersection:
-    __slots__ = ("t", "object")
+    __slots__ = ("t", "object", "u", "v")
 
-    def __init__(self, t: float, obj: WorldObject):
+    def __init__(self, t: float, obj: WorldObject, u: Optional[float] = None, v: Optional[float] = None):
         self.t: float = t
         self.object: WorldObject = obj
+        self.u = u
+        self.v = v
 
     def __eq__(self, other: Intersection) -> bool:
         return abs(self.t - other.t) < EPSILON and self.object == other.object
@@ -64,7 +66,7 @@ class Computations:
         self.object: WorldObject = intersection.object
         self.point: np.ndarray = ray.origin + ray.direction * self.t
         self.eyev = -ray.direction
-        self.normalv = normal_at(self.object, self.point)
+        self.normalv = normal_at(self.object, self.point, intersection)
         if self.normalv.dot(self.eyev) < 0:
             self.inside: bool = True
             self.normalv = -self.normalv
@@ -136,11 +138,11 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     return intersections[index]
 
 
-def normal_at(obj: WorldObject, p: np.ndarray) -> np.ndarray:
+def normal_at(obj: WorldObject, p: np.ndarray, it: Intersection) -> np.ndarray:
     if obj.parent is None:
         tinv = obj.inv_transform
         object_point: np.ndarray = tinv.dot(p)
-        object_normal: np.ndarray = obj.normal_at(object_point)
+        object_normal: np.ndarray = obj.normal_at(object_point, it)
         world_normal: np.ndarray = tinv.T.dot(object_normal)
         world_normal[3] = 0.0
         # normalize inplace

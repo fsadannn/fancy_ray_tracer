@@ -2,17 +2,21 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from os import PathLike
-from typing import Any, Optional, Protocol, Sequence, Tuple, Union
+from typing import Any, List, Optional, Protocol, Sequence, Tuple, Union
 
 import numpy as np
+from typing_extensions import TypeAlias
 
 from .matrices import inverse
 
-ColorInput = Union[
+ColorInput: TypeAlias = Union[
     Sequence[int], Tuple[int, int, int], Tuple[int, int, int, int]
 ]
 
-ColorOutput = Sequence[int]
+ColorOutput: TypeAlias = Sequence[int]
+
+
+TriangleFaces: TypeAlias = Sequence[Tuple[int, int, int]]
 
 
 class Transformable(Protocol):
@@ -70,7 +74,7 @@ class WorldObject(Transformable, ColorAtPoint, Protocol):
     def __eq__(self, other: WorldObject) -> bool:
         raise NotImplementedError
 
-    def normal_at(self, p: np.ndarray) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: IntersectionP) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[IntersectionP]:

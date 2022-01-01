@@ -2,9 +2,11 @@ from math import cos, sin, sqrt
 
 import numpy as np
 
+from fancy_ray_tracer.constants import IDENTITY
+
 
 def identity() -> np.ndarray:
-    return np.eye(4, 4)
+    return IDENTITY
 
 
 def inverse(a: np.ndarray) -> np.ndarray:
