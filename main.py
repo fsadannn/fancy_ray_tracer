@@ -76,12 +76,22 @@ g.add_shape(right)
 g.add_shape(other_box)
 box = make_box(g)
 
+pp = Plane()
+pp.set_transform(chain_ops([translation(0, 0, -4), rotX(-PI / 2)]))
+pp.material.reflective = 0.9
+pp.material.transparency = 1.0
+pp.material.refractive_index = 1.5
+pp.material.ambient = 0.1
+pp.material.diffuse = 0.1
+pp.material.color = make_color(0.2, 0, 0.2)
+pp.has_shadow = False
 
 world = World(Light(point(-10, 10, -10), make_color(1, 1, 1)))
 world.add_object(floor)
 world.add_object(left_wall)
 world.add_object(right_wall)
 world.add_object(g)
+# world.add_object(pp)
 # world.add_object(middle)
 # world.add_object(right)
 # world.add_object(left)

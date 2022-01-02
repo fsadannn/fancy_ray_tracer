@@ -142,7 +142,7 @@ class World:
         intersects = self.intersec(r)
         h = hit_sorted(intersects)
 
-        return h is not None and h.t < distance
+        return h is not None and h.object.has_shadow and h.t < distance
 
     def reflected_color(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
         if cmp.object.material.reflective < EPSILON or remaining <= 0:

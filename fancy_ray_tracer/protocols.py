@@ -70,6 +70,7 @@ class WorldObject(Container, Transformable, ColorAtPoint, Protocol):
     id: str
     material: MaterialP
     parent: Optional[WorldObject]
+    has_shadow: bool
 
     def __eq__(self, other: WorldObject) -> bool:
         raise NotImplementedError

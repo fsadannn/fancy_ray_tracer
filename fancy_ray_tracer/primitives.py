@@ -103,6 +103,7 @@ class Shape(WorldObject):
         self.transform: np.ndarray = IDENTITY
         self.inv_transform: np.ndarray = self.transform
         self.parent: Optional[WorldObject] = None
+        self.has_shadow = True
 
     def color_at(self, point: np.ndarray) -> np.ndarray:
         point = self.inv_transform.dot(point)
