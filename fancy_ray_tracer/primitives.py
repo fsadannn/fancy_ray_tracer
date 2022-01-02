@@ -636,7 +636,8 @@ class SmoothTriangle(Shape):
 # TODO: Implement textures
 class TriangleMesh(Shape):
     __slots__ = ("vertices", "faces_groups", "normals",
-                 "normals_groups", "textures", "texture_groups")
+                 "normals_groups", "textures", "texture_groups",
+                 "e1", "e2")
 
     def __init__(self, vertices: List[np.ndarray], faces_group: TriangleFaces,
                  normals: List[np.ndarray], normals_group: TriangleFaces = None,
@@ -649,22 +650,42 @@ class TriangleMesh(Shape):
         self.normals_groups: TriangleFaces = normals_group
         self.textures: List[np.ndarray] = textures
         self.texture_groups: TriangleFaces = texture_group
+        e1a = []
+        e2a = []
+        for face in self.faces_groups:
+            p1: np.ndarray = self.vertices[face[0]]
+            p2: np.ndarray = self.vertices[face[1]]
+            p3: np.ndarray = self.vertices[face[2]]
+            e1: np.ndarray = p2 - p1
+            e1 = e1[:3]
+            e1a.append(e1)
+            e2: np.ndarray = p3 - p1
+            e2 = e2[:3]
+            e2a.append(e2)
+        self.e1: np.ndarray = np.array(e1a, copy=False, dtype=np.float64)
+        self.e2: np.ndarray = np.array(e2a, copy=False, dtype=np.float64)
 
     def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
         xs: Sequence[Intersection] = []
+
+        direction = direction[:3]
+        e1a = self.e1
+        e2a = self.e2
+        dir_cross_e2a: np.ndarray = np.cross(direction, e2a, axisb=1)
+        # deta: float = np.sum(e1a * dir_cross_e2a, axis=1)
+
         for n, face in enumerate(self.faces_groups):
             p1: np.ndarray = self.vertices[face[0]]
-            p2: np.ndarray = self.vertices[face[1]]
-            p3: np.ndarray = self.vertices[face[2]]
-            e1: np.ndarray = p2 - p1
-            e2: np.ndarray = p3 - p1
+            e1: np.ndarray = e1a[n]
+            e2: np.ndarray = e2a[n]
 
             direction = direction[:3]
-            dir_cross_e2: np.ndarray = np.cross(direction, e2[:3])
-            det: float = e1[:3].dot(dir_cross_e2)
+            dir_cross_e2: np.ndarray = dir_cross_e2a[n]
+            # det: float = deta[n]
+            det: float = e1.dot(dir_cross_e2)
 
             if abs(det) < EPSILON:
                 continue
@@ -677,15 +698,17 @@ class TriangleMesh(Shape):
             if u < 0 or u > 1:
                 continue
 
-            origin_cross_e1: np.ndarray = np.cross(p1_to_origin, e1[:3])
+            origin_cross_e1: np.ndarray = np.cross(p1_to_origin, e1)
             v: float = f * direction.dot(origin_cross_e1)
             if v < 0 or (u + v) > 1:
                 continue
 
-            t: float = f * e2[:3].dot(origin_cross_e1)
+            t: float = f * e2.dot(origin_cross_e1)
             nn = self.normals_groups[n]
-            xs.append(Intersection(t, SmoothTriangle(
-                self.normals[nn[0]], self.normals[nn[1]], self.normals[nn[2]], self.material,), u, v))
+            it = Intersection(t, SmoothTriangle(
+                self.normals[nn[0]], self.normals[nn[1]], self.normals[nn[2]], self.material,), u, v)
+
+            xs.append(it)
 
         if len(xs) < 2:
             return xs

@@ -1,5 +1,5 @@
 import multiprocessing
-from math import sqrt, tan
+from math import ceil, sqrt, tan
 from typing import Optional
 
 import numpy as np
@@ -58,7 +58,7 @@ class Camera:
         return Ray(origin, direction)
 
     def render(self, world: World, canvas: CanvasP):
-        ncpu = multiprocessing.cpu_count()
+        ncpu = ceil(multiprocessing.cpu_count() / 2)
         pp = Parallel(n_jobs=ncpu, verbose=10)
         c = pp(delayed(self._render_y)(world, y) for y in range(self.vsize))
         for y in range(self.vsize):
