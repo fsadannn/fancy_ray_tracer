@@ -128,7 +128,7 @@ class Shape(WorldObject):
 class Sphere(Shape):
     __slots__ = ()
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         p[3] = 0.0
         return p
 
@@ -159,7 +159,7 @@ class Plane(Shape):
         super().__init__(shapeId=shapeId)
         self._normalv: np.ndarray = vector(0, 1, 0)
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         return self._normalv
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -180,7 +180,7 @@ def glass_sphere() -> Sphere:
 class Cube(Shape):
     __slots__ = ()
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         ap = np.abs(p[:3])
         maxc: float = np.max(ap)
         if abs(ap[0] - maxc) < EPSILON:
@@ -210,7 +210,7 @@ class Cylinder(Shape):
         self.maximum = maximum
         self.closed = closed
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         d = p[0] * p[0] + p[2] * p[2]
 
         if d < 1:
@@ -320,7 +320,7 @@ class Cone(Shape):
         self.maximum2 = maximum * maximum
         self.closed = closed
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         d = p[0] * p[0] + p[2] * p[2]
 
         if d < self.maximum2 and p[1] > self.maximum - EPSILON:
@@ -426,7 +426,7 @@ class Group(Shape):
         shape.parent = self
         self.shapes.append(shape)
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -479,7 +479,7 @@ class BoundingBox(Shape):
         self.inv_transform = self.shape.inv_transform
         self.transform = self.shape.transform
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -613,7 +613,7 @@ class Triangle(Shape):
         nm = sqrt(normal.dot(normal))
         self.normal = np.append((1 / nm) * normal, 0)
 
-    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
         return self.normal
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
@@ -674,7 +674,7 @@ class TriangleMesh(Shape):
         self.e1: np.ndarray = np.array(e1a, copy=False, dtype=np.float64)
         self.e2: np.ndarray = np.array(e2a, copy=False, dtype=np.float64)
 
-    def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
+    def normal_at(self, p: np.ndarray, it: Optional[Intersection]) -> np.ndarray:
         raise NotImplementedError
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:

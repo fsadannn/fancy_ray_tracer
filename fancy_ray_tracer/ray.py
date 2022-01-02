@@ -141,7 +141,7 @@ def hit_sorted(intersections: Sequence[Intersection]) -> Optional[Intersection]:
     return intersections[index]
 
 
-def normal_at(obj: WorldObject, p: np.ndarray, it: Intersection) -> np.ndarray:
+def normal_at(obj: WorldObject, p: np.ndarray, it: Optional[Intersection] = None) -> np.ndarray:
     if obj.parent is None:
         tinv = obj.inv_transform
         object_point: np.ndarray = tinv.dot(p)
