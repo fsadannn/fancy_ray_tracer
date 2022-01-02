@@ -29,6 +29,9 @@ class Intersection:
     def __lt__(self, other: Intersection) -> bool:
         return self.t < other.t
 
+    def __repr__(self) -> str:
+        return f"<Intersection t={self.t} obj=<{str(self.object.__class__.__name__)} {self.object.id}>>"
+
 
 class Ray:
     __slots__ = ("origin", "direction")

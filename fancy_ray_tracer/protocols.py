@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from os import PathLike
-from typing import Any, List, Optional, Protocol, Sequence, Tuple, Union
+from typing import Any, Container, List, Optional, Protocol, Sequence, Tuple, Union
 
 import numpy as np
 from typing_extensions import TypeAlias
@@ -66,7 +66,7 @@ class IntersectionP(Protocol):
         raise NotImplementedError
 
 
-class WorldObject(Transformable, ColorAtPoint, Protocol):
+class WorldObject(Container, Transformable, ColorAtPoint, Protocol):
     id: str
     material: MaterialP
     parent: Optional[WorldObject]

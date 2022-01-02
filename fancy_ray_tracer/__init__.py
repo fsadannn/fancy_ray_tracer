@@ -1,5 +1,6 @@
 from .camera import Camera
 from .canvas import Canvas
+from .constants import PI, CSGOperation
 from .illumination import Light, lighting, reflect
 from .materials import (
     ChessPattern,
@@ -20,6 +21,7 @@ from .primitives import (
     Triangle,
     glass_sphere,
     make_box,
+    make_csg,
 )
 from .protocols import WorldObject
 from .ray import Computations, Intersection, Ray, hit, hit_sorted, normal_at

@@ -11,9 +11,9 @@ from .constants import (
     EPSILON,
     IDENTITY,
     INFINITY,
+    CSGOperation,
 )
 from .materials import Material, make_material
-from .matrices import identity
 from .protocols import TriangleFaces, WorldObject
 from .ray import Intersection
 from .tuples import point, vector
@@ -116,6 +116,12 @@ class Shape(WorldObject):
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
         raise NotImplementedError
+
+    def __contains__(self, x: WorldObject) -> bool:
+        if x.id == self.id:
+            return True
+
+        return False
 
 
 class Sphere(Shape):
@@ -411,6 +417,9 @@ class Group(Shape):
     def __init__(self, shapes: Optional[Sequence[WorldObject]] = (), shapeId: Optional[str] = None):
         super().__init__(shapeId=shapeId)
         self.shapes: List[WorldObject] = list(shapes)
+        if len(self.shapes) != 0:
+            for i in self.shapes:
+                i.parent = self
 
     def add_shape(self, shape: WorldObject):
         shape.parent = self
@@ -438,6 +447,20 @@ class Group(Shape):
 
         return xs
 
+    def __contains__(self, x: WorldObject) -> bool:
+
+        # traverse the hierarchy up to reach the current object or reach root object
+        parent: WorldObject = x.parent
+        while parent is not None:
+            if parent.id == self.id:
+                return True
+            parent = parent.parent
+
+        if x.id == self.id:
+            return True
+
+        return False
+
 
 class BoundingBox(Shape):
     __slots__ = ("bound_min", "bound_max", "shape")
@@ -464,6 +487,14 @@ class BoundingBox(Shape):
         if it is None:
             return ()
         return self.shape.intersect(origin, direction)
+
+    def __contains__(self, x: WorldObject) -> bool:
+        # traverse the hierarchy up to reach the current object of reach root object
+
+        if x in self.shape or x.id == self.id:
+            return True
+
+        return False
 
 
 def make_box(shape: WorldObject) -> BoundingBox:
@@ -716,3 +747,65 @@ class SmoothTriangle(Shape):
 
     def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
         raise NotImplementedError
+
+
+class CSG(Shape):
+    __slot__ = ("left", "right", "op")
+
+    def __init__(self, op: CSGOperation, left: WorldObject, right: WorldObject, shapeId: Optional[str] = None):
+        left.parent = self
+        right.parent = self
+        super().__init__(shapeId=shapeId)
+        self.left: WorldObject = left
+        self.right: WorldObject = right
+        self.op: CSGOperation = op
+
+    def __contains__(self, x: WorldObject) -> bool:
+        return x.id == self.id or x in self.left or x in self.right
+
+    def normal_at(self, p: np.ndarray, it: Intersection = None) -> np.ndarray:
+        raise NotImplementedError
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        xs: List[Intersection] = []
+        xs.extend(self.left.intersect(self.left.inv_transform.dot(
+            origin), self.left.inv_transform.dot(direction)))
+        xs.extend(self.right.intersect(self.right.inv_transform.dot(
+            origin), self.right.inv_transform.dot(direction)))
+        if len(xs) >= 2:
+            xs.sort()
+
+        print(xs)
+
+        inl = False
+        inr = False
+        res = []
+        for it in xs:
+            lhit = it.object in self.left
+
+            if interception_allowed(self.op, lhit, inl, inr):
+                res.append(it)
+
+            if lhit:
+                inl = not inl
+            else:
+                inr = not inr
+
+        return res
+
+
+def interception_allowed(op: CSGOperation, lhit: bool, inl: bool, inr: bool) -> bool:
+    if op is CSGOperation.union:
+        return (lhit and not inr) or (not lhit and not inl)
+
+    if op is CSGOperation.interception:
+        return (lhit and inr) or (not lhit and inl)
+
+    if op is CSGOperation.difference:
+        return (lhit and not inr) or (not lhit and inl)
+
+    return False
+
+
+def make_csg(op: CSGOperation, shape1: WorldObject, shape2: WorldObject) -> CSG:
+    return CSG(op, shape1, shape2)
