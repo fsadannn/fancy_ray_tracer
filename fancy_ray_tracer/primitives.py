@@ -100,7 +100,7 @@ class Shape(WorldObject):
     def __init__(self, shapeId: Optional[str] = None):
         self.id: str = shapeId if shapeId else rand_id()
         self.material = make_material()
-        self.transform: np.ndarray = identity()
+        self.transform: np.ndarray = IDENTITY
         self.inv_transform: np.ndarray = self.transform
         self.parent: Optional[WorldObject] = None
 
@@ -610,29 +610,6 @@ class Triangle(Shape):
         return [Intersection(t, self)]
 
 
-class SmoothTriangle(Shape):
-    __slots__ = ("n1", "n2", "n3")
-
-    def __init__(self, n1: np.ndarray, n2: np.ndarray, n3: np.ndarray,
-                 material: Material, shapeId: Optional[str] = None):
-        # super().__init__(shapeId=shapeId)
-        self.n1 = n1
-        self.n2 = n2
-        self.n3 = n3
-        self.transform = IDENTITY
-        self.inv_transform = IDENTITY
-        self.parent = None
-        self.material = material
-        self.id = shapeId
-
-    def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
-        c = 1 - it.u - it.v
-        return it.u * self.n1 + it.v * self.n2 + c * self.n3
-
-    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
-        raise NotImplementedError
-
-
 # TODO: Implement textures
 class TriangleMesh(Shape):
     __slots__ = ("vertices", "faces_groups", "normals",
@@ -676,7 +653,7 @@ class TriangleMesh(Shape):
         e2a = self.e2
         dir_cross_e2a: np.ndarray = np.cross(direction, e2a, axisb=1)
         # deta: float = np.sum(e1a * dir_cross_e2a, axis=1)
-
+        # TODO: move to cython
         for n, face in enumerate(self.faces_groups):
             p1: np.ndarray = self.vertices[face[0]]
             e1: np.ndarray = e1a[n]
@@ -715,3 +692,27 @@ class TriangleMesh(Shape):
 
         xs.sort()
         return xs
+
+
+class SmoothTriangle(Shape):
+    """This class is only for intersections with TriangleMesh"""
+    __slots__ = ("n1", "n2", "n3")
+
+    def __init__(self, n1: np.ndarray, n2: np.ndarray, n3: np.ndarray,
+                 material: Material, shapeId: Optional[str] = None):
+        # super().__init__(shapeId=shapeId)
+        self.n1 = n1
+        self.n2 = n2
+        self.n3 = n3
+        self.transform = IDENTITY
+        self.inv_transform = IDENTITY
+        self.parent = None
+        self.material = material
+        self.id = shapeId
+
+    def normal_at(self, p: np.ndarray, it: Intersection) -> np.ndarray:
+        c = 1 - it.u - it.v
+        return it.u * self.n1 + it.v * self.n2 + c * self.n3
+
+    def intersect(self, origin: np.ndarray, direction: np.ndarray) -> Sequence[Intersection]:
+        raise NotImplementedError
