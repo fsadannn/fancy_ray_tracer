@@ -48,6 +48,7 @@ right.material.reflective = 0.2
 #right.material.refractive_index = 1.5
 #right.material.transparency = 0.9
 # right_box = make_box(right)
+#right.has_shadow = False
 
 left = Sphere()
 left.set_transform(
@@ -112,3 +113,4 @@ camera.render(world, canvas)
 # camera.render_sequential(world, canvas)
 # canvas.save_img("scene.jpg")
 canvas.canvas.show()
+print(camera.pixel_size)

@@ -4,6 +4,8 @@ from math import pow, sqrt
 
 import numpy as np
 
+from fancy_ray_tracer.constants import EPSILON
+
 from .protocols import WorldObject
 from .utils import equal
 
@@ -24,7 +26,7 @@ def reflect(v: np.ndarray, n: np.ndarray) -> np.ndarray:
 
 
 def lighting(obj: WorldObject, light: Light, point: np.ndarray,
-             eyev: np.ndarray, normalv: np.ndarray, in_shadow: bool = False):
+             eyev: np.ndarray, normalv: np.ndarray, in_shadow: float = 0.0):
     # combine the surface color with the light's color/intensity
     material = obj.material
     # color = object.color_at(point)
@@ -33,8 +35,8 @@ def lighting(obj: WorldObject, light: Light, point: np.ndarray,
     # compute the ambient contribution
     ambient = effective_color * material.ambient
 
-    if in_shadow:
-        return ambient
+    # if in_shadow > EPSILON:
+    #    return ambient
 
     # find the direction to the light source
     # normalization inplace, equivalent to
@@ -60,11 +62,11 @@ def lighting(obj: WorldObject, light: Light, point: np.ndarray,
         lightvn - (2.0 * lightvn.dot(normalv)) * normalv).dot(eyev)
 
     if reflect_dot_eye <= 0:
-        return ambient + diffuse
+        return ambient + diffuse * (1.0 - in_shadow)
 
     # compute the specular contribution
     specular = light.intensity * material.specular * \
         pow(reflect_dot_eye, material.shininess)
 
     # Add the three contributions together to get the final shading
-    return ambient + diffuse + specular
+    return ambient + (diffuse + specular) * (1.0 - in_shadow)

@@ -1,4 +1,4 @@
-from math import sqrt
+from math import acos, sqrt
 from typing import (
     Iterable,
     List,
@@ -11,6 +11,9 @@ from typing import (
 
 import numpy as np
 
+from .bridson_sampling import Bridson_sampling
+from .primitives import AXIS_Y_VEC
+
 try:
     from .compiled import _schlick
 except ImportError:
@@ -19,7 +22,7 @@ from .constants import EPSILON, RAY_REFLECTION_LIMIT
 from .illumination import Light, lighting
 from .protocols import WorldObject
 from .ray import Computations, Intersection, Ray, hit_sorted
-from .tuples import make_color
+from .tuples import make_color, normalize
 
 _BLACK = make_color(0, 0, 0)
 _WHITE = make_color(1, 1, 1)
@@ -119,21 +122,21 @@ class World:
 
         return self.shade_hit(Computations(it, ray, intersections), remaining)
 
-    def is_shadowed(self, p: np.ndarray) -> bool:
+    def is_shadowed(self, p: np.ndarray) -> float:
         if len(self.light) == 1:
             return self._is_shadowed(p, self.light[0].position)
 
         if len(self.light) == 0:
-            return True
+            return 1.0
 
-        in_shadow: bool = self._is_shadowed(p, self.light[0].position)
+        in_shadow: float = self._is_shadowed(p, self.light[0].position)
         light: Light
         for light in self.light[1:]:
-            in_shadow |= self._is_shadowed(p, light.position)
+            in_shadow += self._is_shadowed(p, light.position)
 
-        return in_shadow
+        return in_shadow / len(self.light)
 
-    def _is_shadowed(self, p: np.ndarray, light_position: np.ndarray) -> bool:
+    def _is_shadowed(self, p: np.ndarray, light_position: np.ndarray) -> float:
         direction: np.ndarray = light_position - p
         distance: float = sqrt(direction.dot(direction))
         direction *= (1 / distance)
@@ -142,7 +145,50 @@ class World:
         intersects = self.intersec(r)
         h = hit_sorted(intersects)
 
-        return h is not None and h.object.has_shadow and h.t < distance
+        has_shadow = h is not None and h.object.has_shadow and h.t < distance
+
+        if not has_shadow:
+            return 0.0
+
+        return 1.0
+        # TODO: implement soft shadow with less noise
+        # lightTangent = normalize(np.cross(direction[:3], AXIS_Y_VEC[:3]))
+        # if lightTangent.dot(lightTangent) < EPSILON:
+        #     lightTangent[0] = 1.0
+        # lightBitangent = normalize(np.cross(lightTangent, direction[:3]))
+        # lightTangent = np.append(lightTangent, 0)
+        # lightBitangent = np.append(lightBitangent, 0)
+
+        # nsamples = 16
+        # nshadows = 1
+        # #radius = 1 / 5
+        # #points = Bridson_sampling(radius=radius, k=12)
+        # # points = points[:nsamples]
+        # consecutive_shadow = 0
+        # #nrp: np.ndarray = np.random.uniform(-1, 1, (nsamples - 1, 4))
+        # nrp: np.ndarray = 0.5 * np.random.randn(nsamples - 1, 4)
+        # for i in range(len(nrp)):
+        #     # pp = p + lightTangent * \
+        #     #    points[i, 0] + lightBitangent * points[i, 1]
+        #     pp = p + nrp[i]
+        #     direction: np.ndarray = light_position - pp
+        #     distance: float = sqrt(direction.dot(direction))
+        #     direction *= (1 / distance)
+
+        #     r = Ray(p, direction)
+        #     intersects = self.intersec(r)
+        #     h = hit_sorted(intersects)
+
+        #     has_shadow = h is not None and h.object.has_shadow and h.t < distance
+        #     nshadows += int(has_shadow)
+        #     if not has_shadow:
+        #         consecutive_shadow = 0
+        #     else:
+        #         consecutive_shadow += int(has_shadow)
+        #         if consecutive_shadow >= 4:
+        #             return 1.0
+
+        # return nshadows / (nsamples + 1)
 
     def reflected_color(self, cmp: Computations, remaining: int = RAY_REFLECTION_LIMIT) -> np.ndarray:
         if cmp.object.material.reflective < EPSILON or remaining <= 0:
