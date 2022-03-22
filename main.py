@@ -102,8 +102,8 @@ world.add_object(g)
 # world.add_object(left_box)
 # world.add_object(other_box)
 
-hsize = 350
-vsize = 225
+hsize = 640
+vsize = 480
 camera = Camera(hsize, vsize, PI / 3)
 camera.set_transform(view_transform(
     point(0, 2, -7), point(0, 1.5, 0), vector(0, 1, 0)))

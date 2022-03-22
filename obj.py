@@ -4,7 +4,7 @@ from fancy_ray_tracer import *
 from fancy_ray_tracer.constants import PI
 from fancy_ray_tracer.parsers import WavefrontOBJ
 
-with open('3d_objects/teapot-low.obj') as f:
+with open('3d_objects/teapot_mild.obj') as f:
     data = StringIO(f.read())
 
 wobj = WavefrontOBJ(data)
